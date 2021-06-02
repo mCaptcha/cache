@@ -9,7 +9,7 @@
     </strong>
   </p>
 
-[![dependency status](https://deps.rs/repo/github/mCaptcha/cache/status.svg?style=flat-square)](https://deps.rs/repo/github/mCaptcha/cache)
+[![dependency status](https://deps.rs/repo/github/mCaptcha/cache/status.svg)](https://deps.rs/repo/github/mCaptcha/cache)
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg?style=flat-square)](http://www.gnu.org/licenses/agpl-3.0)
 [![Chat](https://img.shields.io/badge/matrix-+mcaptcha:matrix.batsense.net-purple?style=flat-square)](https://matrix.to/#/+mcaptcha:matrix.batsense.net)
 
@@ -21,7 +21,7 @@
 bucket](https://en.wikipedia.org/wiki/Leaky_bucket)-enabled counter to
 keep track of traffic/challenge requests.
 
-- At `t=0`, if someone is visiting an mCaptcha-protected website, the
+- At `t=0`(where `t` is time), if someone is visiting an mCaptcha-protected website, the
   counter for that website will be initialized and set to 1.
 
 - It should also automatically decrement(by 1) after a certain period, say
@@ -29,7 +29,8 @@ keep track of traffic/challenge requests.
   website.
 
 - If at `t=x`(where `x<cooldown`), another user visits the same website,
-  the counter becomes 2 and will auto decrement at `t = cooldown + x`.
+  the counter becomes 2 and will auto decrement at `t = cooldown + x`
+  for second user.
 
   Note that, for the decrement to work, we require two different timers
   that goes off at two different instants. The current(`v0.1.3`) of

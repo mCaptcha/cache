@@ -14,3 +14,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use redis_module::{redis_command, redis_module};
+use redis_module::{Context, NextArg, RedisResult};
+
+mod pocket;
+fn timer_create(ctx: &Context, args: Vec<String>) -> RedisResult {
+    let mut args = args.into_iter().skip(1);
+    // mcaptcha captcha key name
+    let key_name = args.next_string()?;
+    // expiry
+    let duration = args.next_u64()?;
+    pocket::Pocket::increment(ctx, duration, &key_name)?;
+
+    //return Ok("OK".into());
+    return Ok(format!("{}{}", key_name, duration).into());
+}
+
+//////////////////////////////////////////////////////
+
+redis_module! {
+    name: "mcaptcha_cahce",
+    version: 1,
+    data_types: [],
+    commands: [
+        ["mcaptcha_cahce.create", timer_create, "", 0, 0, 0],
+    ],
+}
