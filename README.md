@@ -88,6 +88,14 @@ There are two ways to run `cache`:
 
 ### Docker
 
+Use image from DockerHub:
+
+```bash
+$  docker run -p 6379:6379 mcaptcha/cache:0.1.1-alpha
+```
+
+or build from source:
+
 #### Build
 
 ```bash
