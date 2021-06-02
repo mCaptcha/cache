@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::collections::HashMap;
 use std::os::raw::c_void;
 use std::time::Duration;
 
@@ -29,19 +30,13 @@ use crate::utils::*;
 pub struct Pocket {
     timer: Option<u64>,
     pocket_instant: u64,
-    decrement: Vec<(String, u32)>,
+    decrement: HashMap<String, usize>,
 }
 
 impl Pocket {
-    #[inline]
-    fn get_mut<'a>(v: &'a mut Vec<(String, u32)>, query: &str) -> Option<&'a mut (String, u32)> {
-        v.iter_mut()
-            .find(|(name, _)| if name == query { true } else { false })
-    }
-
     /// creates new pocket and sets off timer to go off at `duration`
     pub fn new(ctx: &Context, duration: u64) -> Result<Self, RedisError> {
-        let decrement = Vec::with_capacity(1);
+        let decrement = HashMap::with_capacity(1);
 
         let pocket_instant = pocket_instant(duration)?;
         let timer = Some(ctx.create_timer(
@@ -81,22 +76,22 @@ impl Pocket {
         let pocket_instant = pocket_instant(duration)?;
         let pocket_name = get_pocket_name(pocket_instant);
 
-        ctx.log_warning(&format!("Pocket name: {}", &pocket_name));
+        ctx.log_debug(&format!("Pocket name: {}", &pocket_name));
 
         // get  pocket
         let pocket = ctx.open_key_writable(&pocket_name);
 
         match pocket.get_value::<Pocket>(&MCAPTCHA_POCKET_TYPE)? {
-            Some(pocket) => match Self::get_mut(&mut pocket.decrement, &captcha_name) {
-                Some((_name, count)) => *count += 1,
+            Some(pocket) => match pocket.decrement.get_mut(&captcha_name) {
+                Some(count) => *count += 1,
                 None => {
-                    pocket.decrement.push((captcha_name, 1));
+                    pocket.decrement.insert(captcha_name, 1);
                 }
             },
 
             None => {
                 let mut counter = Pocket::new(ctx, duration)?;
-                counter.decrement.push((captcha_name, 1));
+                counter.decrement.insert(captcha_name, 1);
                 pocket.set_value(&MCAPTCHA_POCKET_TYPE, counter)?;
                 //                pocket.set_expire(Duration::from_secs(duration + 10))?;
             }
@@ -111,14 +106,14 @@ impl Pocket {
         // get  pocket
         let key = ctx.open_key_writable(&get_pocket_name(pocket_instant));
 
-        ctx.log_warning(&format!("Pocket instant: {}", &pocket_instant));
+        ctx.log_debug(&format!("Pocket instant: {}", &pocket_instant));
         let val = key.get_value::<Pocket>(&MCAPTCHA_POCKET_TYPE).unwrap();
-        ctx.log_warning(&format!("read hashmap "));
+        ctx.log_debug(&format!("read hashmap "));
         match val {
             Some(pocket) => {
-                ctx.log_warning(&format!("entering loop hashmap "));
+                ctx.log_debug(&format!("entering loop hashmap "));
                 for (captcha, count) in pocket.decrement.iter() {
-                    ctx.log_warning(&format!(
+                    ctx.log_debug(&format!(
                         "reading captcha: {} with decr count {}",
                         &captcha, count
                     ));
@@ -127,18 +122,18 @@ impl Pocket {
                         continue;
                     }
 
-                    let mut stored_count: u32 =
+                    let mut stored_count: usize =
                         stored_captcha.read().unwrap().unwrap().parse().unwrap();
                     stored_count -= count;
                     stored_captcha.write(&stored_count.to_string()).unwrap();
                 }
             }
             None => {
-                ctx.log_warning(&format!("pocket not found, can't decrement"));
+                ctx.log_debug(&format!("pocket not found, can't decrement"));
             }
         }
 
-        ctx.log_warning(&format!("loop exited"));
+        ctx.log_debug(&format!("loop exited"));
         let res = key.delete();
 
         if res.is_err() {
@@ -180,58 +175,4 @@ pub static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
 unsafe extern "C" fn free(value: *mut c_void) {
     let val = value as *mut Pocket;
     Box::from_raw(val);
-    //    drop(value as *mut Pocket);
 }
-
-//fn alloc_set(ctx: &Context, args: Vec<String>) -> RedisResult {
-//    let mut args = args.into_iter().skip(1);
-//    let key = args.next_string()?;
-//    let size = args.next_i64()?;
-//
-//    ctx.log_debug(format!("key: {}, size: {}", key, size).as_str());
-//
-//    let key = ctx.open_key_writable(&key);
-//
-//    match key.get_value::<Pocket>(&MCAPTCHA_POCKET_TYPE)? {
-//        Some(value) => {
-//            value.data = "B".repeat(size as usize);
-//        }
-//        None => {
-//            let value = MyType {
-//                data: "A".repeat(size as usize),
-//            };
-//
-//            key.set_value(&MCAPTCHA_POCKET_TYPE, value)?;
-//        }
-//    }
-//
-//    Ok(size.into())
-//}
-
-//fn alloc_get(ctx: &Context, args: Vec<String>) -> RedisResult {
-//    let mut args = args.into_iter().skip(1);
-//    let key = args.next_string()?;
-//
-//    let key = ctx.open_key(&key);
-//
-//    let value = match key.get_value::<MyType>(&MCAPTCHA_POCKET_TYPE)? {
-//        Some(value) => value.data.as_str().into(),
-//        None => ().into(),
-//    };
-//
-//    Ok(value)
-//}
-
-//////////////////////////////////////////////////////
-
-//redis_module! {
-//    name: "alloc",
-//    version: 1,
-//    data_types: [
-//        MY_REDIS_TYPE,
-//    ],
-//    commands: [
-//        ["alloc.set", alloc_set, "write", 1, 1, 1],
-//        ["alloc.get", alloc_get, "readonly", 1, 1, 1],
-//    ],
-//}
