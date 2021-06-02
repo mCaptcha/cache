@@ -64,7 +64,7 @@ decrement key `myCounter` at `t=y`(where y is an instant in future),
 This way, we are not spinning timers for every decrement operation but
 instead, one for every "time pocket".
 
-## Usage
+### Gotchas:
 
 This module creates and manages data of two types:
 
@@ -78,6 +78,46 @@ This module is capable of cleaning up after itself so manual clean up is
 unnecessary. If you have needs that are not met my this module and you
 which access/mutate data manually, please open an
 [issue](https://github.com/mCaptcha/cache/issues). I'd be happy to help.
+
+## Usage
+
+There are two ways to run `cache`:
+
+1. [Using docker](#docker)
+2. [On bare-metal](#bare-metal)
+
+### Docker
+
+#### Build
+
+```bash
+$ docker build -t mcaptcha/cache:latest .
+```
+
+#### Run
+
+```bash
+$  docker run -p 6379:6379 mcaptcha/cache:latest
+```
+
+### Bare-metal
+
+#### Build
+
+Make sure you have Rust installed:
+https://www.rust-lang.org/tools/install
+
+Then, build as usual:
+
+```bash
+cargo build --release
+```
+
+#### Run
+
+```
+redis-server --loadmodule ./target/release/libcache.so
+```
 
 ### Commands
 
