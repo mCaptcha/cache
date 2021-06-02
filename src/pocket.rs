@@ -125,7 +125,17 @@ impl Pocket {
                     let mut stored_count: usize =
                         stored_captcha.read().unwrap().unwrap().parse().unwrap();
                     stored_count -= count;
-                    stored_captcha.write(&stored_count.to_string()).unwrap();
+                    if stored_count == 0 {
+                        match stored_captcha.delete() {
+                            Err(e) => ctx.log_warning(&format!(
+                                "Error occured while cleaning up captcha when it became 0: {}",
+                                e
+                            )),
+                            Ok(_) => (),
+                        }
+                    } else {
+                        stored_captcha.write(&stored_count.to_string()).unwrap();
+                    }
                 }
             }
             None => {

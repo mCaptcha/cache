@@ -30,8 +30,7 @@ fn timer_create(ctx: &Context, args: Vec<String>) -> RedisResult {
     let duration = args.next_u64()?;
     pocket::Pocket::increment(ctx, duration, &key_name)?;
 
-    //return Ok("OK".into());
-    return Ok(format!("{}{}", key_name, duration).into());
+    Ok("OK".into())
 }
 
 //////////////////////////////////////////////////////
@@ -41,6 +40,6 @@ redis_module! {
     version: 1,
     data_types: [MCAPTCHA_POCKET_TYPE,],
     commands: [
-        ["mcaptcha_cahce.create", timer_create, "write", 1, 1, 1],
+        ["mcaptcha_cache.create", timer_create, "write", 1, 2, 1],
     ],
 }
