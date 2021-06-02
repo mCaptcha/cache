@@ -28,8 +28,11 @@ use crate::utils::*;
 
 #[derive(Debug, Clone)]
 pub struct Pocket {
+    /// timer ID
     timer: Option<u64>,
+    /// instant(seconds from UNIX_EPOCH) at which time pocket begins decrement process
     pocket_instant: u64,
+    /// a list of captcha keys that should be decremented during clean up
     decrement: HashMap<String, usize>,
 }
 
@@ -93,11 +96,10 @@ impl Pocket {
                 let mut counter = Pocket::new(ctx, duration)?;
                 counter.decrement.insert(captcha_name, 1);
                 pocket.set_value(&MCAPTCHA_POCKET_TYPE, counter)?;
-                //                pocket.set_expire(Duration::from_secs(duration + 10))?;
+                pocket.set_expire(Duration::from_secs(duration + 30))?;
             }
         };
 
-        //    return Ok("OK".into());
         Ok(())
     }
 
