@@ -139,13 +139,25 @@ better suited to your workload.
 
 - platform: `Intel core i7-9750h`
 
+### With request pipelining
+
 ```bash
-➜  ~ redis-benchmark -n 1000000 -t set,get -P 16 -q # set and get are
-for baseline/reference
+➜  ~ redis-benchmark -n 1000000 -t set,get -P 16 -q # set and get are for baseline/reference
 SET: 835421.88 requests per second, p50=0.759 msec
 GET: 987166.81 requests per second, p50=0.711 msec
 
 ➜  ~ redis-benchmark -n 1000000 -P 16 -q MCAPTCHA_CACHE.COUNT mycounter 45
-
 MCAPTCHA_CACHE.COUNT mycounter 45: 280504.91 requests per second, p50=2.743 msec
+```
+
+### Without request pipelining
+
+```bash
+➜  ~ redis-benchmark -n 1000000 -t set,get -q # set and get are for baseline/reference
+SET: 87062.51 requests per second, p50=0.311 msec
+GET: 87252.41 requests per second, p50=0.311 msec
+
+
+➜  ~ redis-benchmark -n 1000000 -q MCAPTCHA_CACHE.COUNT mycounter 45
+MCAPTCHA_CACHE.COUNT mycounter 45: 87214.38 requests per second, p50=0.471 msec
 ```
