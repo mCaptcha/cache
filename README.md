@@ -130,3 +130,22 @@ If counter exists, then count is incremented. Otherwise, it is created.
 ```redis
 MCAPTCHA_CACHE.COUNT <counter-name> <leak-rate>
 ```
+
+## Benchmark
+
+**NOTE:** These benchmarks are for reference only. Do not depend upon
+them too much. When in doubt, please craft and run benchmarks that are
+better suited to your workload.
+
+- platform: `Intel core i7-9750h`
+
+```bash
+➜  ~ redis-benchmark -n 1000000 -t set,get -P 16 -q # set and get are
+for baseline/reference
+SET: 835421.88 requests per second, p50=0.759 msec
+GET: 987166.81 requests per second, p50=0.711 msec
+
+➜  ~ redis-benchmark -n 1000000 -P 16 -q MCAPTCHA_CACHE.COUNT mycounter 45
+
+MCAPTCHA_CACHE.COUNT mycounter 45: 280504.91 requests per second, p50=2.743 msec
+```
