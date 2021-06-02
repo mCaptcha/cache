@@ -18,6 +18,10 @@ use redis_module::{redis_command, redis_module};
 use redis_module::{Context, NextArg, RedisResult};
 
 mod pocket;
+mod utils;
+
+use pocket::MCAPTCHA_POCKET_TYPE;
+
 fn timer_create(ctx: &Context, args: Vec<String>) -> RedisResult {
     let mut args = args.into_iter().skip(1);
     // mcaptcha captcha key name
@@ -35,8 +39,8 @@ fn timer_create(ctx: &Context, args: Vec<String>) -> RedisResult {
 redis_module! {
     name: "mcaptcha_cahce",
     version: 1,
-    data_types: [],
+    data_types: [MCAPTCHA_POCKET_TYPE,],
     commands: [
-        ["mcaptcha_cahce.create", timer_create, "", 0, 0, 0],
+        ["mcaptcha_cahce.create", timer_create, "write", 1, 1, 1],
     ],
 }

@@ -15,48 +15,33 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::collections::HashMap;
 use std::os::raw::c_void;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
 use redis_module::RedisError;
 use redis_module::{raw, Context};
 
-pub const PREFIX_COUNTER: &str = "mcaptcha_cache:captcha:";
-pub const PREFIX_TIME_POCKET: &str = "mcaptcha_cache:pocket:";
+use crate::utils::*;
 
 #[derive(Debug, Clone)]
 pub struct Pocket {
     timer: Option<u64>,
     pocket_instant: u64,
-    decrement: HashMap<String, usize>,
-}
-
-#[inline]
-/// duration in seconds
-fn get_pocket_name(pocket_instant: u64) -> String {
-    format!("{}{}", PREFIX_TIME_POCKET, pocket_instant)
-}
-
-#[inline]
-fn pocket_instant(duration: u64) -> Result<u64, RedisError> {
-    match SystemTime::now().duration_since(UNIX_EPOCH) {
-        Ok(val) => Ok(val.as_secs() + duration),
-        Err(_) => Err(RedisError::String("SystemTime before UNIX EPOCH!".into())),
-    }
-}
-
-#[inline]
-fn get_captcha_key(name: &str) -> String {
-    format!("{}{}", PREFIX_COUNTER, name)
+    decrement: Vec<(String, u32)>,
 }
 
 impl Pocket {
+    #[inline]
+    fn get_mut<'a>(v: &'a mut Vec<(String, u32)>, query: &str) -> Option<&'a mut (String, u32)> {
+        v.iter_mut()
+            .find(|(name, _)| if name == query { true } else { false })
+    }
+
     /// creates new pocket and sets off timer to go off at `duration`
     pub fn new(ctx: &Context, duration: u64) -> Result<Self, RedisError> {
-        let decrement = HashMap::new();
+        let decrement = Vec::with_capacity(1);
 
         let pocket_instant = pocket_instant(duration)?;
         let timer = Some(ctx.create_timer(
@@ -102,18 +87,18 @@ impl Pocket {
         let pocket = ctx.open_key_writable(&pocket_name);
 
         match pocket.get_value::<Pocket>(&MCAPTCHA_POCKET_TYPE)? {
-            Some(pocket) => match pocket.decrement.get_mut(&captcha_name) {
-                Some(count) => *count += 1,
+            Some(pocket) => match Self::get_mut(&mut pocket.decrement, &captcha_name) {
+                Some((_name, count)) => *count += 1,
                 None => {
-                    pocket.decrement.insert(captcha_name, 1);
+                    pocket.decrement.push((captcha_name, 1));
                 }
             },
 
             None => {
                 let mut counter = Pocket::new(ctx, duration)?;
-                counter.decrement.insert(captcha_name, 1);
+                counter.decrement.push((captcha_name, 1));
                 pocket.set_value(&MCAPTCHA_POCKET_TYPE, counter)?;
-                pocket.set_expire(Duration::from_secs(duration + 10))?;
+                //                pocket.set_expire(Duration::from_secs(duration + 10))?;
             }
         };
 
@@ -132,7 +117,7 @@ impl Pocket {
         match val {
             Some(pocket) => {
                 ctx.log_warning(&format!("entering loop hashmap "));
-                for (captcha, count) in pocket.decrement.drain() {
+                for (captcha, count) in pocket.decrement.iter() {
                     ctx.log_warning(&format!(
                         "reading captcha: {} with decr count {}",
                         &captcha, count
@@ -142,7 +127,7 @@ impl Pocket {
                         continue;
                     }
 
-                    let mut stored_count: usize =
+                    let mut stored_count: u32 =
                         stored_captcha.read().unwrap().unwrap().parse().unwrap();
                     stored_count -= count;
                     stored_captcha.write(&stored_count.to_string()).unwrap();
@@ -156,16 +141,18 @@ impl Pocket {
         ctx.log_warning(&format!("loop exited"));
         let res = key.delete();
 
-        ctx.log_warning(&format!(
-            "enountered error while deleting hashmap: {:?}",
-            res
-        ));
-        //res.unwrap();
+        if res.is_err() {
+            ctx.log_warning(&format!(
+                "enountered error while deleting hashmap: {:?}",
+                res
+            ));
+        }
+        res.unwrap();
     }
 }
 
-static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
-    "mcaptcha_cache_pocket",
+pub static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
+    "mcaptchac",
     0,
     raw::RedisModuleTypeMethods {
         version: raw::REDISMODULE_TYPE_METHOD_VERSION as u64,
