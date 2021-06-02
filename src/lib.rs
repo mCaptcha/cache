@@ -40,6 +40,6 @@ redis_module! {
     version: 1,
     data_types: [MCAPTCHA_POCKET_TYPE,],
     commands: [
-        ["mcaptcha_cache.create", timer_create, "write", 1, 2, 1],
+        ["mcaptcha_cache.count", timer_create, "write", 1, 2, 1],
     ],
 }

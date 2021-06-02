@@ -63,3 +63,30 @@ decrement key `myCounter` at `t=y`(where y is an instant in future),
 
 This way, we are not spinning timers for every decrement operation but
 instead, one for every "time pocket".
+
+## Usage
+
+This module creates and manages data of two types:
+
+1.  `mcaptcha_cache:captcha:y` where `y`(last character) is variable
+2.  `mcaptcha_cache:pocket:x` where `x`(last character) is variable
+
+**WARNING: Please don't modify these manually. If you do so, then Redis
+will panic**
+
+This module is capable of cleaning up after itself so manual clean up is
+unnecessary. If you have needs that are not met my this module and you
+which access/mutate data manually, please open an
+[issue](https://github.com/mCaptcha/cache/issues). I'd be happy to help.
+
+### Commands
+
+Every counter has a name and a leak-rate in seconds.
+
+## Create/Increment counter
+
+If counter exists, then count is incremented. Otherwise, it is created.
+
+```redis
+MCAPTCHA_CACHE.COUNT <counter-name> <leak-rate>
+```
