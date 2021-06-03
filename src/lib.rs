@@ -17,10 +17,20 @@
 use redis_module::{redis_command, redis_module};
 use redis_module::{Context, NextArg, RedisResult};
 
+mod errors;
 mod pocket;
 mod utils;
 
 use pocket::MCAPTCHA_POCKET_TYPE;
+
+/// Pocket[pocket::Pocket] type version
+pub const REDIS_MCAPTCHA_POCKET_TYPE_VERSION: i32 = 0;
+
+/// counter/captcha key prefix
+pub const PREFIX_COUNTER: &str = "mcaptcha_cache:captcha:";
+
+/// pocket key prefix
+pub const PREFIX_TIME_POCKET: &str = "mcaptcha_cache:pocket:";
 
 fn timer_create(ctx: &Context, args: Vec<String>) -> RedisResult {
     let mut args = args.into_iter().skip(1);

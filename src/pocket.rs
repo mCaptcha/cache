@@ -23,10 +23,19 @@ use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
 use redis_module::RedisError;
 use redis_module::{raw, Context};
+use serde::{Deserialize, Serialize};
 
+use crate::errors::CacheError;
 use crate::utils::*;
+use crate::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq)]
+/// encoding formats for persistence
+pub enum Format {
+    JSON,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Pocket {
     /// timer ID
     timer: Option<u64>,
@@ -156,17 +165,27 @@ impl Pocket {
         }
         res.unwrap();
     }
+
+    pub fn parse_str(data: &str, format: Format) -> Result<Pocket, CacheError> {
+        match format {
+            Format::JSON => Ok(serde_json::from_str(data)?),
+        }
+    }
+
+    pub fn from_str(data: &str, format: Format) -> Result<Self, CacheError> {
+        Ok(Pocket::parse_str(data, format)?)
+    }
 }
 
 pub static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
     "mcaptchac",
-    0,
+    REDIS_MCAPTCHA_POCKET_TYPE_VERSION,
     raw::RedisModuleTypeMethods {
         version: raw::REDISMODULE_TYPE_METHOD_VERSION as u64,
-        rdb_load: None,
-        rdb_save: None,
+        rdb_load: Some(type_methods::rdb_load),
+        rdb_save: Some(type_methods::rdb_save),
         aof_rewrite: None,
-        free: Some(free),
+        free: Some(type_methods::free),
 
         // Currently unused by Redis
         mem_usage: None,
@@ -184,7 +203,34 @@ pub static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
     },
 );
 
-unsafe extern "C" fn free(value: *mut c_void) {
-    let val = value as *mut Pocket;
-    Box::from_raw(val);
+pub mod type_methods {
+    use libc::c_int;
+
+    use super::*;
+
+    #[allow(non_snake_case, unused)]
+    pub extern "C" fn rdb_load(rdb: *mut raw::RedisModuleIO, encver: c_int) -> *mut c_void {
+        let json = match encver {
+            0 => {
+                let data = raw::load_string(rdb);
+                Pocket::from_str(&data, Format::JSON).unwrap()
+            }
+            _ => panic!("Can't load old RedisJSON RDB"),
+        };
+        Box::into_raw(Box::new(json)) as *mut c_void
+    }
+
+    pub unsafe extern "C" fn free(value: *mut c_void) {
+        let val = value as *mut Pocket;
+        Box::from_raw(val);
+    }
+
+    #[allow(non_snake_case, unused)]
+    pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
+        let pocket = &*(value as *mut Pocket);
+        match &serde_json::to_string(pocket) {
+            Ok(string) => raw::save_string(rdb, &string),
+            Err(e) => eprintln!("error while rdb_save: {}", e),
+        }
+    }
 }
