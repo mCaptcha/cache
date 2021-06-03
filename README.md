@@ -68,14 +68,16 @@ decrement key `myCounter` at `t=y`(where y is an instant in future),
    all registered decrements. When its done, it cleans itself up.
 
 This way, we are not spinning timers for every decrement operation but
-instead, one for every "time pocket".
+instead, one for every "pocket".
 
 ### Gotchas:
 
-This module creates and manages data of two types:
+This module creates and manages data of three types:
 
 1.  `mcaptcha_cache:captcha:y` where `y`(last character) is variable
 2.  `mcaptcha_cache:pocket:x` where `x`(last character) is variable
+3.  `mcaptcha:timer:z` where `z`(last character) is pocket name from
+    step 2(See [Hacks](#hacks)).
 
 **WARNING: Please don't modify these manually. If you do so, then Redis
 will panic**
@@ -174,3 +176,16 @@ GET: 900090.06 requests per second, p50=0.775 msec
 mCaptcha cache with piplining
 MCAPTCHA_CACHE.COUNT mycounter 45: 274876.31 requests per second, p50=2.767 msec
 ```
+
+## Hacks
+
+I couldn't find any ways to persist timers to disk(`RDB`/`AOF`). So I'm
+using a dummy record(`mcaptcha:timer:*` see [Gotchas](#gotchas)) which
+will expire after an arbitrary time(see `POCKET_EXPIRY_OFFSET` in
+[`lib.rs`](./src/lib.rs)). When that expiry occurs, I derive the key of
+the pocket from the values that are passed to expiration event handlers
+and perform clean up of both the pocket and counters registered with the
+pocket.
+
+Ideally, I should be able to persist timers but I couldn't find ways to
+do that.

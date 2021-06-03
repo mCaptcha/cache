@@ -139,7 +139,7 @@ impl Pocket {
                 pocket.set_value(&MCAPTCHA_POCKET_TYPE, counter)?;
                 let timer = ctx.open_key_writable(&get_timer_name_from_pocket_name(&pocket_name));
                 timer.write("1")?;
-                timer.set_expire(Duration::from_secs(duration + 30))?;
+                timer.set_expire(Duration::from_secs(duration + POCKET_EXPIRY_OFFSET))?;
             }
         };
 

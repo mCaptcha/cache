@@ -35,6 +35,10 @@ pub const PREFIX_POCKET: &str = "mcaptcha_cache:pocket:";
 /// pocket timer key prefix
 pub const PREFIX_POCKET_TIMER: &str = "mcaptcha:timer:";
 
+/// If pockets perform clean up at x instant, then pockets themselves will get cleaned
+/// up at x + POCKET_EXPIRY_OFFSET(if they haven't already been cleaned up)
+pub const POCKET_EXPIRY_OFFSET: u64 = 30;
+
 fn timer_create(ctx: &Context, args: Vec<String>) -> RedisResult {
     let mut args = args.into_iter().skip(1);
     // mcaptcha captcha key name
