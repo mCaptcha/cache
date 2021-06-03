@@ -23,11 +23,23 @@ use crate::*;
 #[inline]
 /// duration in seconds
 pub fn get_pocket_name(pocket_instant: u64) -> String {
-    format!("{}{}", PREFIX_TIME_POCKET, pocket_instant)
+    format!("{}{}", PREFIX_POCKET, pocket_instant)
 }
 
 #[inline]
-pub fn pocket_instant(duration: u64) -> Result<u64, RedisError> {
+/// duration in seconds
+pub fn get_timer_name_from_pocket_name(pocket_name: &str) -> String {
+    format!("{}{}", PREFIX_POCKET_TIMER, pocket_name)
+}
+
+#[inline]
+/// duration in seconds
+pub fn get_pocket_name_from_timer_name(name: &str) -> Option<&str> {
+    name.strip_prefix(PREFIX_POCKET_TIMER)
+}
+
+#[inline]
+pub fn get_pocket_instant(duration: u64) -> Result<u64, RedisError> {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
         Ok(val) => Ok(val.as_secs() + duration),
         Err(_) => Err(RedisError::String("SystemTime before UNIX EPOCH!".into())),
@@ -38,3 +50,20 @@ pub fn pocket_instant(duration: u64) -> Result<u64, RedisError> {
 pub fn get_captcha_key(name: &str) -> String {
     format!("{}{}", PREFIX_COUNTER, name)
 }
+
+//#[cfg(test)]
+//mod tests {
+//    use super::*;
+//
+//    #[test]
+//    fn timer_name_works() {
+//        const POCKET_INSTANT: u64 = 12345678;
+//        let pocket_name: String = get_pocket_name(POCKET_INSTANT);
+//
+//        let timer_name = get_timer_name_from_pocket_name(&pocket_name);
+//        assert_eq!(
+//            get_pocket_name_from_timer_name(&timer_name),
+//            Some(pocket_name.as_str())
+//        );
+//    }
+//}

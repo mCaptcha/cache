@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use redis_module::{redis_command, redis_module};
+use redis_module::{redis_command, redis_event_handler, redis_module};
 use redis_module::{Context, NextArg, RedisResult};
 
 mod errors;
@@ -30,7 +30,10 @@ pub const REDIS_MCAPTCHA_POCKET_TYPE_VERSION: i32 = 0;
 pub const PREFIX_COUNTER: &str = "mcaptcha_cache:captcha:";
 
 /// pocket key prefix
-pub const PREFIX_TIME_POCKET: &str = "mcaptcha_cache:pocket:";
+pub const PREFIX_POCKET: &str = "mcaptcha_cache:pocket:";
+
+/// pocket timer key prefix
+pub const PREFIX_POCKET_TIMER: &str = "mcaptcha:timer:";
 
 fn timer_create(ctx: &Context, args: Vec<String>) -> RedisResult {
     let mut args = args.into_iter().skip(1);
@@ -52,4 +55,7 @@ redis_module! {
     commands: [
         ["mcaptcha_cache.count", timer_create, "write", 1, 2, 1],
     ],
+   event_handlers: [
+        [@EXPIRED @EVICTED: pocket::Pocket::on_delete],
+    ]
 }

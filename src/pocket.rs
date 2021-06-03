@@ -18,9 +18,12 @@
 use std::collections::HashMap;
 use std::os::raw::c_void;
 use std::time::Duration;
+//use std::time::{SystemTime, UNIX_EPOCH};
 
+use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
+use redis_module::NotifyEvent;
 use redis_module::RedisError;
 use redis_module::{raw, Context};
 use serde::{Deserialize, Serialize};
@@ -38,7 +41,7 @@ pub enum Format {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Pocket {
     /// timer ID
-    timer: Option<u64>,
+    timer: u64,
     /// instant(seconds from UNIX_EPOCH) at which time pocket begins decrement process
     pocket_instant: u64,
     /// a list of captcha keys that should be decremented during clean up
@@ -46,16 +49,44 @@ pub struct Pocket {
 }
 
 impl Pocket {
+    pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &str) {
+        let msg = format!(
+            "Received event: {:?} on key: {} via event: {}",
+            event_type, key_name, event
+        );
+        ctx.log_debug(msg.as_str());
+
+        if !key_name.contains(PREFIX_POCKET_TIMER) {
+            return;
+        }
+
+        let pocket_name = get_pocket_name_from_timer_name(key_name);
+        if pocket_name.is_none() {
+            return;
+        }
+
+        let pocket_name = pocket_name.unwrap();
+
+        let pocket = ctx.open_key_writable(&pocket_name);
+        Pocket::decrement_runner(ctx, &pocket);
+        if pocket.key_type() == KeyType::Empty {
+            ctx.log_debug(&format!("Pocket doesn't exist: {}", &key_name));
+            return;
+        } else {
+            Pocket::decrement_runner(ctx, &pocket);
+        }
+    }
+
     /// creates new pocket and sets off timer to go off at `duration`
     pub fn new(ctx: &Context, duration: u64) -> Result<Self, RedisError> {
         let decrement = HashMap::with_capacity(1);
 
-        let pocket_instant = pocket_instant(duration)?;
-        let timer = Some(ctx.create_timer(
+        let pocket_instant = get_pocket_instant(duration)?;
+        let timer = ctx.create_timer(
             Duration::from_secs(duration),
             Self::decrement,
             pocket_instant,
-        ));
+        );
 
         let pocket = Pocket {
             timer,
@@ -70,6 +101,7 @@ impl Pocket {
         let captcha_name = get_captcha_key(captcha);
         // increment
         let captcha = ctx.open_key_writable(&captcha_name);
+
         match captcha.read()? {
             Some(val) => {
                 if val.trim().is_empty() {
@@ -85,7 +117,7 @@ impl Pocket {
             }
         }
 
-        let pocket_instant = pocket_instant(duration)?;
+        let pocket_instant = get_pocket_instant(duration)?;
         let pocket_name = get_pocket_name(pocket_instant);
 
         ctx.log_debug(&format!("Pocket name: {}", &pocket_name));
@@ -105,21 +137,19 @@ impl Pocket {
                 let mut counter = Pocket::new(ctx, duration)?;
                 counter.decrement.insert(captcha_name, 1);
                 pocket.set_value(&MCAPTCHA_POCKET_TYPE, counter)?;
-                pocket.set_expire(Duration::from_secs(duration + 30))?;
+                let timer = ctx.open_key_writable(&get_timer_name_from_pocket_name(&pocket_name));
+                timer.write("1")?;
+                timer.set_expire(Duration::from_secs(duration + 30))?;
             }
         };
 
         Ok(())
     }
 
-    /// executes when timer goes off. Decrements all registered counts and cleans itself up
-    fn decrement(ctx: &Context, pocket_instant: u64) {
-        // get  pocket
-        let key = ctx.open_key_writable(&get_pocket_name(pocket_instant));
-
-        ctx.log_debug(&format!("Pocket instant: {}", &pocket_instant));
+    /// decrement runner that decrements all registered counts _without_ cleaning after itself
+    /// use [decrement] when you require auto cleanup. Internally, it calls this method.
+    fn decrement_runner(ctx: &Context, key: &RedisKeyWritable) {
         let val = key.get_value::<Pocket>(&MCAPTCHA_POCKET_TYPE).unwrap();
-        ctx.log_debug(&format!("read hashmap "));
         match val {
             Some(pocket) => {
                 ctx.log_debug(&format!("entering loop hashmap "));
@@ -153,17 +183,20 @@ impl Pocket {
                 ctx.log_debug(&format!("pocket not found, can't decrement"));
             }
         }
+    }
 
-        ctx.log_debug(&format!("loop exited"));
-        let res = key.delete();
+    /// executes when timer goes off. Decrements all registered counts and cleans itself up
+    fn decrement(ctx: &Context, pocket_instant: u64) {
+        // get  pocket
+        let key = ctx.open_key_writable(&get_pocket_name(pocket_instant));
+        ctx.log_debug(&format!("Pocket instant: {}", &pocket_instant));
 
-        if res.is_err() {
-            ctx.log_warning(&format!(
-                "enountered error while deleting hashmap: {:?}",
-                res
-            ));
+        Pocket::decrement_runner(ctx, &key);
+
+        match key.delete() {
+            Err(e) => ctx.log_warning(&format!("enountered error while deleting hashmap: {:?}", e)),
+            Ok(_) => (),
         }
-        res.unwrap();
     }
 
     pub fn parse_str(data: &str, format: Format) -> Result<Pocket, CacheError> {
@@ -210,14 +243,16 @@ pub mod type_methods {
 
     #[allow(non_snake_case, unused)]
     pub extern "C" fn rdb_load(rdb: *mut raw::RedisModuleIO, encver: c_int) -> *mut c_void {
-        let json = match encver {
+        let pocket = match encver {
             0 => {
                 let data = raw::load_string(rdb);
                 Pocket::from_str(&data, Format::JSON).unwrap()
             }
             _ => panic!("Can't load old RedisJSON RDB"),
         };
-        Box::into_raw(Box::new(json)) as *mut c_void
+
+        //        if pocket.
+        Box::into_raw(Box::new(pocket)) as *mut c_void
     }
 
     pub unsafe extern "C" fn free(value: *mut c_void) {
