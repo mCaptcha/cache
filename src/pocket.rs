@@ -188,12 +188,17 @@ impl Pocket {
     /// executes when timer goes off. Decrements all registered counts and cleans itself up
     fn decrement(ctx: &Context, pocket_instant: u64) {
         // get  pocket
-        let key = ctx.open_key_writable(&get_pocket_name(pocket_instant));
+        let pocket_name = get_pocket_name(pocket_instant);
+
+        let timer = ctx.open_key_writable(&get_timer_name_from_pocket_name(&pocket_name));
+        let _ = timer.delete();
+
         ctx.log_debug(&format!("Pocket instant: {}", &pocket_instant));
 
-        Pocket::decrement_runner(ctx, &key);
+        let pocket = ctx.open_key_writable(&pocket_name);
+        Pocket::decrement_runner(ctx, &pocket);
 
-        match key.delete() {
+        match pocket.delete() {
             Err(e) => ctx.log_warning(&format!("enountered error while deleting hashmap: {:?}", e)),
             Ok(_) => (),
         }

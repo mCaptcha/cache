@@ -15,6 +15,12 @@
 
 </div>
 
+## Features
+
+- [x] Timers for individual count
+- [x] Persistence through RDB
+- [ ] Persistence through AOF
+
 ## Motivation
 
 [mCaptcha](https://github.com/mCaptcha/mCaptcha) uses a [leaky-
@@ -145,27 +151,26 @@ MCAPTCHA_CACHE.COUNT <counter-name> <leak-rate>
 them too much. When in doubt, please craft and run benchmarks that are
 better suited to your workload.
 
-- platform: `Intel core i7-9750h`
-
-### With request pipelining
+To run benchmarks locally, launch Redis server with module loaded and:
 
 ```bash
-➜  ~ redis-benchmark -n 1000000 -t set,get -P 16 -q # set and get are for baseline/reference
-SET: 835421.88 requests per second, p50=0.759 msec
-GET: 987166.81 requests per second, p50=0.711 msec
-
-➜  ~ redis-benchmark -n 1000000 -P 16 -q MCAPTCHA_CACHE.COUNT mycounter 45
-MCAPTCHA_CACHE.COUNT mycounter 45: 280504.91 requests per second, p50=2.743 msec
+$ ./scripts/bench.sh
 ```
 
-### Without request pipelining
+- platform: `Intel core i7-9750h`
 
 ```bash
-➜  ~ redis-benchmark -n 1000000 -t set,get -q # set and get are for baseline/reference
-SET: 87062.51 requests per second, p50=0.311 msec
-GET: 87252.41 requests per second, p50=0.311 msec
+running set and get without pipelining
+SET: 86095.57 requests per second, p50=0.311 msec
+GET: 87519.70 requests per second, p50=0.311 msec
 
+mCaptcha cache without piplining
+MCAPTCHA_CACHE.COUNT mycounter 45: 85375.22 requests per second, p50=0.479 msec
 
-➜  ~ redis-benchmark -n 1000000 -q MCAPTCHA_CACHE.COUNT mycounter 45
-MCAPTCHA_CACHE.COUNT mycounter 45: 87214.38 requests per second, p50=0.471 msec
+running set and get with pipelining
+SET: 822368.44 requests per second, p50=0.855 msec
+GET: 900090.06 requests per second, p50=0.775 msec
+
+mCaptcha cache with piplining
+MCAPTCHA_CACHE.COUNT mycounter 45: 274876.31 requests per second, p50=2.767 msec
 ```
