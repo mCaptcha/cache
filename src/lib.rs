@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use redis_module::{redis_command, redis_event_handler, redis_module};
-use redis_module::{Context, NextArg, RedisResult};
+use redis_module::{Context, NextArg, RedisResult, REDIS_OK};
 
 mod errors;
 mod pocket;
@@ -47,7 +47,7 @@ fn timer_create(ctx: &Context, args: Vec<String>) -> RedisResult {
     let duration = args.next_u64()?;
     pocket::Pocket::increment(ctx, duration, &key_name)?;
 
-    Ok("OK".into())
+    REDIS_OK
 }
 
 //////////////////////////////////////////////////////
