@@ -23,19 +23,19 @@ use crate::*;
 #[inline]
 /// duration in seconds
 pub fn get_pocket_name(pocket_instant: u64) -> String {
-    format!("{}{}", PREFIX_POCKET, pocket_instant)
+    unsafe { format!("{}{}", PREFIX_POCKET, pocket_instant) }
 }
 
 #[inline]
 /// duration in seconds
 pub fn get_timer_name_from_pocket_name(pocket_name: &str) -> String {
-    format!("{}{}", PREFIX_POCKET_TIMER, pocket_name)
+    unsafe { format!("{}{}", PREFIX_POCKET_TIMER, pocket_name) }
 }
 
 #[inline]
 /// duration in seconds
 pub fn get_pocket_name_from_timer_name(name: &str) -> Option<&str> {
-    name.strip_prefix(PREFIX_POCKET_TIMER)
+    unsafe { name.strip_prefix(&PREFIX_POCKET_TIMER) }
 }
 
 #[inline]
@@ -48,7 +48,12 @@ pub fn get_pocket_instant(duration: u64) -> Result<u64, RedisError> {
 
 #[inline]
 pub fn get_captcha_key(name: &str) -> String {
-    format!("{}{}", PREFIX_COUNTER, name)
+    unsafe { format!("{}{}", PREFIX_COUNTER, name) }
+}
+
+#[inline]
+pub fn is_pocket_timer(name: &str) -> bool {
+    unsafe { name.contains(&PREFIX_POCKET_TIMER) }
 }
 
 //#[cfg(test)]
@@ -67,3 +72,23 @@ pub fn get_captcha_key(name: &str) -> String {
 //        );
 //    }
 //}
+
+mod temp {
+    lazy_static::lazy_static! {
+        pub static ref ID: usize = {
+            use rand::prelude::*;
+            let mut rng = rand::thread_rng();
+            rng.gen()
+        };
+
+
+
+        /// counter/captcha key prefix
+        static ref PREFIX_COUNTER: String = format!("mcaptcha_cache:captcha:");
+
+        /// pocket key prefix
+        static ref PREFIX_POCKET: String = format!("mcaptcha_cache:pocket:{{{}}}:", *ID);
+        /// pocket timer key prefix
+        static ref PREFIX_POCKET_TIMER: String = format!("mcaptcha_cache:timer:");
+    }
+}

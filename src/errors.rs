@@ -20,6 +20,12 @@ pub struct CacheError {
     pub msg: String,
 }
 
+impl CacheError {
+    pub fn new(msg: String) -> Self {
+        Self { msg }
+    }
+}
+
 impl From<String> for CacheError {
     fn from(e: String) -> Self {
         CacheError { msg: e }
@@ -41,5 +47,11 @@ impl From<serde_json::Error> for CacheError {
 impl From<CacheError> for redis_module::RedisError {
     fn from(e: CacheError) -> Self {
         redis_module::RedisError::String(e.msg)
+    }
+}
+
+impl From<CacheError> for redis_module::RedisResult {
+    fn from(e: CacheError) -> Self {
+        Err(redis_module::RedisError::String(e.msg))
     }
 }

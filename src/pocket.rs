@@ -56,7 +56,7 @@ impl Pocket {
         );
         ctx.log_debug(msg.as_str());
 
-        if !key_name.contains(PREFIX_POCKET_TIMER) {
+        if !is_pocket_timer(key_name) {
             return;
         }
 
@@ -99,6 +99,7 @@ impl Pocket {
     /// increments count of key = captcha and registers for auto decrement
     pub fn increment(ctx: &Context, duration: u64, captcha: &str) -> Result<(), RedisError> {
         let captcha_name = get_captcha_key(captcha);
+        ctx.log_warning(&captcha_name);
         // increment
         let captcha = ctx.open_key_writable(&captcha_name);
 
