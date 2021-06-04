@@ -18,6 +18,7 @@
 ## Features
 
 - [x] Timers for individual count
+- [x] Clustering
 - [x] Persistence through RDB
 - [ ] Persistence through AOF
 
