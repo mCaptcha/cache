@@ -79,7 +79,7 @@ impl Pocket {
     /// creates new pocket and sets off timer to go off at `duration`
     #[inline]
     pub fn new(ctx: &Context, duration: u64) -> Result<Self, RedisError> {
-        let decrement = HashMap::with_capacity(1);
+        let decrement = HashMap::with_capacity(HIT_PER_SECOND);
 
         let pocket_instant = get_pocket_instant(duration)?;
         let timer = ctx.create_timer(
@@ -156,7 +156,7 @@ impl Pocket {
         match val {
             Some(pocket) => {
                 ctx.log_debug(&format!("entering loop hashmap "));
-                for (captcha, count) in pocket.decrement.iter() {
+                for (captcha, count) in pocket.decrement.drain() {
                     ctx.log_debug(&format!(
                         "reading captcha: {} with decr count {}",
                         &captcha, count

@@ -15,7 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use lazy_static::lazy_static;
-
 use redis_module::raw::KeyType;
 use redis_module::{redis_command, redis_event_handler, redis_module};
 use redis_module::{Context, NextArg, RedisResult, REDIS_OK};
@@ -26,9 +25,14 @@ mod utils;
 
 use pocket::MCAPTCHA_POCKET_TYPE;
 
+/// Initial allocation ammount of pocket[pocket::Pocket]
+pub const HIT_PER_SECOND: usize = 100;
+
 /// Pocket[pocket::Pocket] type version
-pub const REDIS_MCAPTCHA_POCKET_TYPE_VERSION: i32 = 0;
+pub const REDIS_MCAPTCHA_POCKET_TYPE_VERSION: i32 = 1;
+
 pub const PKG_NAME: &str = "mcap";
+pub const PKG_VERSION: usize = 1;
 
 /// pocket timer key prefix
 // PREFIX_POCKET_TIMER is used like this:
@@ -78,11 +82,9 @@ fn counter_create(ctx: &Context, args: Vec<String>) -> RedisResult {
     REDIS_OK
 }
 
-//////////////////////////////////////////////////////
-
 redis_module! {
     name: "mcaptcha_cahce",
-    version: 1,
+    version: PKG_VERSION,
     data_types: [MCAPTCHA_POCKET_TYPE,],
     commands: [
         ["mcaptcha_cache.count", counter_create, "write", 1, 1, 1],
