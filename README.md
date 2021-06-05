@@ -147,7 +147,13 @@ Every counter has a name and a leak-rate in seconds.
 If counter exists, then count is incremented. Otherwise, it is created.
 
 ```redis
-MCAPTCHA_CACHE.COUNT <counter-name> <leak-rate>
+MCAPTCHA_CACHE.COUNT <counter-name> <leak-rate-in-seconds>
+```
+
+## Get counter value
+
+```redis
+MCAPTCHA_CACHE.GET <counter-name>
 ```
 
 ## Benchmark
