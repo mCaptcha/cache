@@ -28,31 +28,31 @@ use pocket::MCAPTCHA_POCKET_TYPE;
 
 /// Pocket[pocket::Pocket] type version
 pub const REDIS_MCAPTCHA_POCKET_TYPE_VERSION: i32 = 0;
+pub const PKG_NAME: &str = "mcap";
 
-lazy_static! {
-    pub static ref ID: usize = {
-        use rand::prelude::*;
-        let mut rng = rand::thread_rng();
-        rng.gen()
-    };
-
-    /// counter/captcha key prefix
-    pub     static ref PREFIX_COUNTER: String = format!("mcaptcha_cache:captcha:");
-
-    /// pocket key prefix
-    pub     static ref PREFIX_POCKET: String = format!("mcaptcha_cache:pocket:{{{}}}:", *ID);
-    /// pocket timer key prefix
-    pub     static ref PREFIX_POCKET_TIMER: String = format!("mcaptcha_cache:timer:");
-
-
-}
+/// pocket timer key prefix
+// PREFIX_POCKET_TIMER is used like this:
+// PREFIX_POCKET_TIMER:PREFIX_POCKET:time(where time is variable)
+// It contains PKG_NAME and key hash tag for node pinning
+// so, I guess it's okay for us to just use timer and not enfore pinning
+// and PKG_NAME
+pub const PREFIX_POCKET_TIMER: &str = "timer:";
 
 /// If pockets perform clean up at x instant, then pockets themselves will get cleaned
 /// up at x + POCKET_EXPIRY_OFFSET(if they haven't already been cleaned up)
 pub const POCKET_EXPIRY_OFFSET: u64 = 30;
 
-fn counter_create(ctx: &Context, args: Vec<String>) -> RedisResult {
-    counter_runner(ctx, args)
+lazy_static! {
+    /// node unique identifier, useful when running in cluster mode
+    pub static ref ID: usize = {
+        use rand::prelude::*;
+        let mut rng = rand::thread_rng();
+        rng.gen()
+    };
+    /// counter/captcha key prefix
+    pub static ref PREFIX_COUNTER: String = format!("{}:captcha:", PKG_NAME);
+    /// pocket key prefix
+    pub static ref PREFIX_POCKET: String = format!("{}:pocket:{{{}}}:", PKG_NAME, *ID);
 }
 
 fn get(ctx: &Context, args: Vec<String>) -> RedisResult {
@@ -68,14 +68,12 @@ fn get(ctx: &Context, args: Vec<String>) -> RedisResult {
     Ok(stored_captcha.read()?.unwrap().into())
 }
 
-fn counter_runner(ctx: &Context, args: Vec<String>) -> RedisResult {
+fn counter_create(ctx: &Context, args: Vec<String>) -> RedisResult {
     let mut args = args.into_iter().skip(1);
     // mcaptcha captcha key name
     let key_name = args.next_string()?;
-
     // expiry
     let duration = args.next_u64()?;
-
     pocket::Pocket::increment(ctx, duration, &key_name)?;
     REDIS_OK
 }

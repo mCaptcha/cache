@@ -35,6 +35,9 @@ pub fn get_timer_name_from_pocket_name(pocket_name: &str) -> String {
 #[inline]
 /// duration in seconds
 pub fn get_pocket_name_from_timer_name(name: &str) -> Option<&str> {
+    // PREFIX_POCKET_TIMER doesn't have node unique crate::ID
+    // this way, even if we are loading keys of a different instance, well
+    // get POCKET keys from whatever TIMER is expiring
     name.strip_prefix(&*PREFIX_POCKET_TIMER)
 }
 
@@ -72,22 +75,3 @@ pub fn is_pocket_timer(name: &str) -> bool {
 //        );
 //    }
 //}
-
-mod temp {
-    lazy_static::lazy_static! {
-        pub static ref ID: usize = {
-            use rand::prelude::*;
-            let mut rng = rand::thread_rng();
-            rng.gen()
-        };
-
-
-        /// counter/captcha key prefix
-        static ref PREFIX_COUNTER: String = format!("mcaptcha_cache:captcha:");
-
-        /// pocket key prefix
-        static ref PREFIX_POCKET: String = format!("mcaptcha_cache:pocket:{{{}}}:", *ID);
-        /// pocket timer key prefix
-        static ref PREFIX_POCKET_TIMER: String = format!("mcaptcha_cache:timer:");
-    }
-}
