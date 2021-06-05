@@ -9,8 +9,10 @@
     </strong>
   </p>
 
-[![dependency status](https://deps.rs/repo/github/mCaptcha/cache/status.svg)](https://deps.rs/repo/github/mCaptcha/cache)
+[![CI Linux)](https://github.com/mCaptcha/cache/actions/workflows/linux.yml/badge.svg)](https://github.com/mCaptcha/cache/actions/workflows/linux.yml)
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg?style=flat-square)](http://www.gnu.org/licenses/agpl-3.0)
+[![dependency status](https://deps.rs/repo/github/mCaptcha/cache/status.svg)](https://deps.rs/repo/github/mCaptcha/cache)
+<br />
 [![Chat](https://img.shields.io/badge/matrix-+mcaptcha:matrix.batsense.net-purple?style=flat-square)](https://matrix.to/#/+mcaptcha:matrix.batsense.net)
 
 </div>
