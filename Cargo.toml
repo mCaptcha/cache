@@ -7,13 +7,10 @@ edition = "2018"
 repository = "https://github.com/mcaptcha/cache"
 homepage = "https://github.com/mcaptcha/cache"
 license = "AGPLv3 or later version"
-#crate-type = ["cdylib"]
-#required-features = ["experimental-api"]
 
 [lib]
 crate-type = ["cdylib"]
 name = "cache"
-path = "./src/lib.rs"
 
 [dependencies]
 redis-module = { version="0.17", features = ["experimental-api"]}
@@ -23,5 +20,8 @@ serde = {version = "1.0.126", features = ["derive"]}
 lazy_static = "1.4.0"
 rand = "0.8.3"
 
-[target.x86_64-unknown-linux-musl]
-linker = "cc"
+#[target.x86_64-unknown-linux-musl]
+#linker = "cc"
+
+[features]
+test = ["redis-module/test"]

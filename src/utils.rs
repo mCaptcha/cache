@@ -59,19 +59,19 @@ pub fn is_pocket_timer(name: &str) -> bool {
     name.contains(&*PREFIX_POCKET_TIMER)
 }
 
-//#[cfg(test)]
-//mod tests {
-//    use super::*;
-//
-//    #[test]
-//    fn timer_name_works() {
-//        const POCKET_INSTANT: u64 = 12345678;
-//        let pocket_name: String = get_pocket_name(POCKET_INSTANT);
-//
-//        let timer_name = get_timer_name_from_pocket_name(&pocket_name);
-//        assert_eq!(
-//            get_pocket_name_from_timer_name(&timer_name),
-//            Some(pocket_name.as_str())
-//        );
-//    }
-//}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn timer_name_works() {
+        const POCKET_INSTANT: u64 = 12345678;
+        let pocket_name: String = get_pocket_name(POCKET_INSTANT);
+
+        let timer_name = get_timer_name_from_pocket_name(&pocket_name);
+        assert_eq!(
+            get_pocket_name_from_timer_name(&timer_name),
+            Some(pocket_name.as_str())
+        );
+    }
+}
