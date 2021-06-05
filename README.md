@@ -102,7 +102,7 @@ There are two ways to run `cache`:
 Use image from DockerHub:
 
 ```bash
-$  docker run -p 6379:6379 mcaptcha/cache:0.1.1-alpha
+$  docker run -p 6379:6379 mcaptcha/cache
 ```
 
 or build from source:
@@ -110,13 +110,13 @@ or build from source:
 #### Build
 
 ```bash
-$ docker build -t mcaptcha/cache:latest .
+$ docker build -t mcaptcha/cache .
 ```
 
 #### Run
 
 ```bash
-$  docker run -p 6379:6379 mcaptcha/cache:latest
+$  docker run -p 6379:6379 mcaptcha/cache
 ```
 
 ### Bare-metal
