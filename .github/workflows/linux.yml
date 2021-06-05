@@ -37,25 +37,43 @@ jobs:
           profile: minimal
           override: false
 
-      - name: build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all --bins --examples --tests
+      - name: install dependencies
+        run: make dev-env
 
-      - name: tests
-        uses: actions-rs/cargo@v1
-        timeout-minutes: 40
-        with:
-          command: test
-          args: --all --all-features --no-fail-fast
+      - name: build docker image
+        run: make docker-build
 
-      - name: Generate coverage file
-        if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: '0.15.0'
-          args: '-t 1200 --all-features'
+      - name: start docker container
+        run: make docker-start
+
+      - name: run tests
+        run: make test
+
+      - name: generate coverage
+        run: make xml-test-coverage
+
+      - name: stop docker container
+        run: make docker-stop
+
+        #      - name: build
+        #        uses: actions-rs/cargo@v1
+        #        with:
+        #          command: build
+        #          args: --all --bins --examples --tests
+        #
+        #      - name: tests
+        #        uses: actions-rs/cargo@v1
+        #        timeout-minutes: 40
+        #        with:
+        #          command: test
+        #          args: --all --all-features --no-fail-fast
+        #
+        #      - name: Generate coverage file
+        #        if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
+        #        uses: actions-rs/tarpaulin@v0.1
+        #        with:
+        #          version: '0.15.0'
+        #          args: '-t 1200 --all-features'
 
       - name: Upload to Codecov
         if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
@@ -63,15 +81,20 @@ jobs:
         with:
           file: cobertura.xml
 
+
       - name: generate documentation
-        if: matrix.version == 'stable' && (github.repository == 'realaravinth/damn-vuln-blockchain')
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-deps --workspace --all-features
+        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
+        run: make docs
+
+        #      - name: generate documentation
+        #        if: matrix.version == 'stable' && (github.repository == 'realaravinth/damn-vuln-blockchain')
+        #        uses: actions-rs/cargo@v1
+        #        with:
+        #          command: doc
+        #          args: --no-deps --workspace --all-features
 
       - name: Deploy to GitHub Pages
-        if: matrix.version == 'stable' && (github.repository == 'realaravinth/damn-vuln-blockchain')
+        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
