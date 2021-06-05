@@ -1,3 +1,7 @@
+VERSION = "0.1.0:alpha"
+DOCKER_IMG = "mcaptcha/cache$(version)"
+DOCKER_CONTAINER = "mcaptcha_cache_test"
+
 default:
 	cargo build --release
 
@@ -6,14 +10,15 @@ test:
 	./tests/test.py
 
 docker-build:
-	docker build -t mcaptcha/cache:0.1.1-alpha .
+	#docker build -t mcaptcha/cache:0.1.1-alpha .
+	docker build -t $(DOCKER_IMG) .
 
 docker-stop:
-	docker stop mcaptcha_cache_test || true
-	docker rm mcaptcha_cache_test
+	docker stop $(DOCKER_CONTAINER) || true
+	docker rm $(DOCKER_CONTAINER)
 
 docker-run:
-	docker run --detach --name=mcaptcha_cache_test \
+	docker run --detach --name=$(DOCKER_CONTAINER) \
 		--publish 6379:6379 \
 		mcaptcha/cache:0.1.1-alpha 
 
