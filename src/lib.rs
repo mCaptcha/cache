@@ -50,7 +50,7 @@ lazy_static! {
         rng.gen()
     };
     /// counter/captcha key prefix
-    pub static ref PREFIX_COUNTER: String = format!("{}:captcha:", PKG_NAME);
+    pub static ref PREFIX_COUNTER: String = format!("{}:captcha:{}:", PKG_NAME, *ID);
     /// pocket key prefix
     pub static ref PREFIX_POCKET: String = format!("{}:pocket:{{{}}}:", PKG_NAME, *ID);
 }

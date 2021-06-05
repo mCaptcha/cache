@@ -164,18 +164,18 @@ $ ./scripts/bench.sh
 
 ```bash
 running set and get without pipelining
-SET: 86095.57 requests per second, p50=0.311 msec
-GET: 87519.70 requests per second, p50=0.311 msec
+SET: 125046.89 requests per second, p50=0.199 msec
+GET: 124502.00 requests per second, p50=0.199 msec
 
 mCaptcha cache without piplining
-MCAPTCHA_CACHE.COUNT mycounter 45: 85375.22 requests per second, p50=0.479 msec
+MCAPTCHA_CACHE.COUNT mycounter 45: 124828.37 requests per second, p50=0.215 msec
 
 running set and get with pipelining
-SET: 822368.44 requests per second, p50=0.855 msec
-GET: 900090.06 requests per second, p50=0.775 msec
+SET: 1353179.88 requests per second, p50=0.487 msec
+GET: 1633987.00 requests per second, p50=0.383 msec
 
 mCaptcha cache with piplining
-MCAPTCHA_CACHE.COUNT mycounter 45: 274876.31 requests per second, p50=2.767 msec
+MCAPTCHA_CACHE.COUNT mycounter 45: 385653.69 requests per second, p50=1.959 msec
 ```
 
 ## Hacks

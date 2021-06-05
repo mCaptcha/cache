@@ -68,7 +68,6 @@ impl Pocket {
         let pocket_name = pocket_name.unwrap();
 
         let pocket = ctx.open_key_writable(&pocket_name);
-        Pocket::decrement_runner(ctx, &pocket);
         if pocket.key_type() == KeyType::Empty {
             ctx.log_debug(&format!("Pocket doesn't exist: {}", &key_name));
             return;
@@ -78,6 +77,7 @@ impl Pocket {
     }
 
     /// creates new pocket and sets off timer to go off at `duration`
+    #[inline]
     pub fn new(ctx: &Context, duration: u64) -> Result<Self, RedisError> {
         let decrement = HashMap::with_capacity(1);
 
@@ -97,9 +97,10 @@ impl Pocket {
     }
 
     /// increments count of key = captcha and registers for auto decrement
+    #[inline]
     pub fn increment(ctx: &Context, duration: u64, captcha: &str) -> Result<(), RedisError> {
         let captcha_name = get_captcha_key(captcha);
-        ctx.log_warning(&captcha_name);
+        ctx.log_debug(&captcha_name);
         // increment
         let captcha = ctx.open_key_writable(&captcha_name);
 
@@ -149,6 +150,7 @@ impl Pocket {
 
     /// decrement runner that decrements all registered counts _without_ cleaning after itself
     /// use [decrement] when you require auto cleanup. Internally, it calls this method.
+    #[inline]
     fn decrement_runner(ctx: &Context, key: &RedisKeyWritable) {
         let val = key.get_value::<Pocket>(&MCAPTCHA_POCKET_TYPE).unwrap();
         match val {
@@ -205,12 +207,14 @@ impl Pocket {
         }
     }
 
+    #[inline]
     pub fn parse_str(data: &str, format: Format) -> Result<Pocket, CacheError> {
         match format {
             Format::JSON => Ok(serde_json::from_str(data)?),
         }
     }
 
+    #[inline]
     pub fn from_str(data: &str, format: Format) -> Result<Self, CacheError> {
         Ok(Pocket::parse_str(data, format)?)
     }
