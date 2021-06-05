@@ -1,4 +1,4 @@
-VERSION = "0.1.0:alpha"
+VERSION = "0.1.0:alpha-test"
 DOCKER_IMG = "mcaptcha/cache$(version)"
 DOCKER_CONTAINER = "mcaptcha_cache_test"
 
@@ -10,7 +10,6 @@ test:
 	./tests/test.py
 
 docker-build:
-	#docker build -t mcaptcha/cache:0.1.1-alpha .
 	docker build -t $(DOCKER_IMG) .
 
 docker-stop:
@@ -20,7 +19,7 @@ docker-stop:
 docker-run:
 	docker run --detach --name=$(DOCKER_CONTAINER) \
 		--publish 6379:6379 \
-		mcaptcha/cache:0.1.1-alpha 
+		$(DOCKER_IMG)
 
 dev-env:
 	./scripts/setup.sh
