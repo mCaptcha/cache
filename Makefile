@@ -1,5 +1,5 @@
 VERSION = "0.1.0:alpha-test"
-DOCKER_IMG = "mcaptcha/cache$(version)"
+DOCKER_IMG = "mcaptcha/cache$(VERSION)"
 DOCKER_CONTAINER = "mcaptcha_cache_test"
 
 default:
