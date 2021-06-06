@@ -21,27 +21,27 @@ use crate::*;
 
 #[inline]
 /// duration in seconds
-pub fn get_pocket_name(pocket_instant: u64) -> String {
-    format!("{}{}", &*PREFIX_POCKET, pocket_instant)
+pub fn get_bucket_name(bucket_instant: u64) -> String {
+    format!("{}{}", &*PREFIX_BUCKET, bucket_instant)
 }
 
 #[inline]
 /// duration in seconds
-pub fn get_timer_name_from_pocket_name(pocket_name: &str) -> String {
-    format!("{}{}", &*PREFIX_POCKET_TIMER, pocket_name)
+pub fn get_timer_name_from_bucket_name(bucket_name: &str) -> String {
+    format!("{}{}", &*PREFIX_BUCKET_TIMER, bucket_name)
 }
 
 #[inline]
 /// duration in seconds
-pub fn get_pocket_name_from_timer_name(name: &str) -> Option<&str> {
-    // PREFIX_POCKET_TIMER doesn't have node unique crate::ID
+pub fn get_bucket_name_from_timer_name(name: &str) -> Option<&str> {
+    // PREFIX_BUCKET_TIMER doesn't have node unique crate::ID
     // this way, even if we are loading keys of a different instance, well
-    // get POCKET keys from whatever TIMER is expiring
-    name.strip_prefix(&*PREFIX_POCKET_TIMER)
+    // get BUCKET keys from whatever TIMER is expiring
+    name.strip_prefix(&*PREFIX_BUCKET_TIMER)
 }
 
 #[inline]
-pub fn get_pocket_instant(duration: u64) -> CacheResult<u64> {
+pub fn get_bucket_instant(duration: u64) -> CacheResult<u64> {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
         Ok(val) => Ok(val.as_secs() + duration),
         Err(_) => Err(CacheError::new("SystemTime before UNIX EPOCH!".into())),
@@ -54,8 +54,8 @@ pub fn get_captcha_key(name: &str) -> String {
 }
 
 #[inline]
-pub fn is_pocket_timer(name: &str) -> bool {
-    name.contains(&*PREFIX_POCKET_TIMER)
+pub fn is_bucket_timer(name: &str) -> bool {
+    name.contains(&*PREFIX_BUCKET_TIMER)
 }
 
 #[cfg(test)]
@@ -64,13 +64,13 @@ mod tests {
 
     #[test]
     fn timer_name_works() {
-        const POCKET_INSTANT: u64 = 12345678;
-        let pocket_name: String = get_pocket_name(POCKET_INSTANT);
+        const BUCKET_INSTANT: u64 = 12345678;
+        let bucket_name: String = get_bucket_name(BUCKET_INSTANT);
 
-        let timer_name = get_timer_name_from_pocket_name(&pocket_name);
+        let timer_name = get_timer_name_from_bucket_name(&bucket_name);
         assert_eq!(
-            get_pocket_name_from_timer_name(&timer_name),
-            Some(pocket_name.as_str())
+            get_bucket_name_from_timer_name(&timer_name),
+            Some(bucket_name.as_str())
         );
     }
 }

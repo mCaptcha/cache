@@ -1,6 +1,7 @@
 #!/bin/env python3 
 
 from time import sleep
+from threading import Thread
 
 from redis.client import Redis
 from redis import BlockingConnectionPool
@@ -11,10 +12,6 @@ COMMANDS = {
 "COUNT" : "mcaptcha_cache.count",
 "GET" : "mcaptcha_cache.get",
 }
-
-
-KEY = "testing_module"
-TIME = 20
 
 def connect():
     r = Redis(connection_pool=BlockingConnectionPool(max_connections=2))
@@ -37,33 +34,50 @@ def get_count(key):
     except:
         return 0
 
-def race(count):
-    for _ in range(count):
-        incr(KEY, TIME)
-
-def assert_count(expect):
-    count = get_count(KEY)
+def assert_count(expect, key):
+    count = get_count(key)
     assert count == expect
+
+def incr_one_works():
+    key = "incr_one"
+    time = 2
+    initial_count = get_count(key)
+    # incriment
+    incr(key, time)
+    assert_count(initial_count + 1, key)
+    # wait till expiry
+    sleep(time + 2)
+    assert_count(initial_count, key)
+    print("Incr one works")
+
+def race_works():
+    key = "race_works"
+    initial_count = get_count(key)
+    race_num = 200
+    time = 3
+
+    for _ in range(race_num):
+        incr(key, time)
+    assert_count(initial_count + race_num, key)
+    # wait till expiry
+    sleep(time + 2)
+    assert_count(initial_count, key)
+    print("Race works")
+
 
 def main():
     # check connectivity
     ping()
-    # get initial count(residual)
-    initial_count = get_count(KEY)
-    # incriment
-    incr(KEY, TIME)
-    assert_count(initial_count + 1)
-    # wait till expiry
-    sleep(TIME + 4)
-    assert_count(initial_count)
-    # increment by 200
-    race_num = 200
-    race(race_num)
-    assert_count(initial_count + race_num)
-    # wait till expiry
-    sleep(TIME + 4)
-    assert_count(initial_count)
-    print("All good")
+
+    t1 = Thread(target=incr_one_works)
+    t2 = Thread(target=race_works)
+
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+    print("All tests passed")
 
 
 if __name__ == "__main__":

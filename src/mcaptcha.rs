@@ -18,7 +18,7 @@ use redis_module::native_types::RedisType;
 use redis_module::raw;
 use serde::{Deserialize, Serialize};
 
-use crate::pocket::Format;
+use crate::bucket::Format;
 
 const REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION: i32 = 1;
 
@@ -59,7 +59,7 @@ impl MCaptcha {
     }
 }
 
-pub static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
+pub static MCAPTCHA_MCAPTCHA_TYPE: RedisType = RedisType::new(
     "mcaptmcapa",
     REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION,
     raw::RedisModuleTypeMethods {

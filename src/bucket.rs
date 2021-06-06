@@ -52,16 +52,16 @@ impl Format {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Pocket {
+pub struct Bucket {
     /// timer ID
     timer: u64,
-    /// instant(seconds from UNIX_EPOCH) at which time pocket begins decrement process
-    pocket_instant: u64,
+    /// instant(seconds from UNIX_EPOCH) at which time bucket begins decrement process
+    bucket_instant: u64,
     /// a list of captcha keys that should be decremented during clean up
     decrement: HashMap<String, usize>,
 }
 
-impl Pocket {
+impl Bucket {
     pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &str) {
         let msg = format!(
             "Received event: {:?} on key: {} via event: {}",
@@ -69,44 +69,44 @@ impl Pocket {
         );
         ctx.log_debug(msg.as_str());
 
-        if !is_pocket_timer(key_name) {
+        if !is_bucket_timer(key_name) {
             return;
         }
 
-        let pocket_name = get_pocket_name_from_timer_name(key_name);
-        if pocket_name.is_none() {
+        let bucket_name = get_bucket_name_from_timer_name(key_name);
+        if bucket_name.is_none() {
             return;
         }
 
-        let pocket_name = pocket_name.unwrap();
+        let bucket_name = bucket_name.unwrap();
 
-        let pocket = ctx.open_key_writable(&pocket_name);
-        if pocket.key_type() == KeyType::Empty {
-            ctx.log_debug(&format!("Pocket doesn't exist: {}", &key_name));
+        let bucket = ctx.open_key_writable(&bucket_name);
+        if bucket.key_type() == KeyType::Empty {
+            ctx.log_debug(&format!("Bucket doesn't exist: {}", &key_name));
             return;
         } else {
-            Pocket::decrement_runner(ctx, &pocket);
+            Bucket::decrement_runner(ctx, &bucket);
         }
     }
 
-    /// creates new pocket and sets off timer to go off at `duration`
+    /// creates new bucket and sets off timer to go off at `duration`
     #[inline]
     pub fn new(ctx: &Context, duration: u64) -> CacheResult<Self> {
         let decrement = HashMap::with_capacity(HIT_PER_SECOND);
 
-        let pocket_instant = get_pocket_instant(duration)?;
+        let bucket_instant = get_bucket_instant(duration)?;
         let timer = ctx.create_timer(
             Duration::from_secs(duration),
             Self::decrement,
-            pocket_instant,
+            bucket_instant,
         );
 
-        let pocket = Pocket {
+        let bucket = Bucket {
             timer,
-            pocket_instant,
+            bucket_instant,
             decrement,
         };
-        Ok(pocket)
+        Ok(bucket)
     }
 
     /// increments count of key = captcha and registers for auto decrement
@@ -132,29 +132,29 @@ impl Pocket {
             }
         }
 
-        let pocket_instant = get_pocket_instant(duration)?;
-        let pocket_name = get_pocket_name(pocket_instant);
+        let bucket_instant = get_bucket_instant(duration)?;
+        let bucket_name = get_bucket_name(bucket_instant);
 
-        ctx.log_debug(&format!("Pocket name: {}", &pocket_name));
+        ctx.log_debug(&format!("Bucket name: {}", &bucket_name));
 
-        // get  pocket
-        let pocket = ctx.open_key_writable(&pocket_name);
+        // get  bucket
+        let bucket = ctx.open_key_writable(&bucket_name);
 
-        match pocket.get_value::<Pocket>(&MCAPTCHA_POCKET_TYPE)? {
-            Some(pocket) => match pocket.decrement.get_mut(&captcha_name) {
+        match bucket.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE)? {
+            Some(bucket) => match bucket.decrement.get_mut(&captcha_name) {
                 Some(count) => *count += 1,
                 None => {
-                    pocket.decrement.insert(captcha_name, 1);
+                    bucket.decrement.insert(captcha_name, 1);
                 }
             },
 
             None => {
-                let mut counter = Pocket::new(ctx, duration)?;
+                let mut counter = Bucket::new(ctx, duration)?;
                 counter.decrement.insert(captcha_name, 1);
-                pocket.set_value(&MCAPTCHA_POCKET_TYPE, counter)?;
-                let timer = ctx.open_key_writable(&get_timer_name_from_pocket_name(&pocket_name));
+                bucket.set_value(&MCAPTCHA_BUCKET_TYPE, counter)?;
+                let timer = ctx.open_key_writable(&get_timer_name_from_bucket_name(&bucket_name));
                 timer.write("1")?;
-                timer.set_expire(Duration::from_secs(duration + POCKET_EXPIRY_OFFSET))?;
+                timer.set_expire(Duration::from_secs(duration + BUCKET_EXPIRY_OFFSET))?;
             }
         };
 
@@ -165,11 +165,11 @@ impl Pocket {
     /// use [decrement] when you require auto cleanup. Internally, it calls this method.
     #[inline]
     fn decrement_runner(ctx: &Context, key: &RedisKeyWritable) {
-        let val = key.get_value::<Pocket>(&MCAPTCHA_POCKET_TYPE).unwrap();
+        let val = key.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE).unwrap();
         match val {
-            Some(pocket) => {
+            Some(bucket) => {
                 ctx.log_debug(&format!("entering loop hashmap "));
-                for (captcha, count) in pocket.decrement.drain() {
+                for (captcha, count) in bucket.decrement.drain() {
                     ctx.log_debug(&format!(
                         "reading captcha: {} with decr count {}",
                         &captcha, count
@@ -196,34 +196,57 @@ impl Pocket {
                 }
             }
             None => {
-                ctx.log_debug(&format!("pocket not found, can't decrement"));
+                ctx.log_debug(&format!("bucket not found, can't decrement"));
             }
         }
     }
 
     /// executes when timer goes off. Decrements all registered counts and cleans itself up
-    fn decrement(ctx: &Context, pocket_instant: u64) {
-        // get  pocket
-        let pocket_name = get_pocket_name(pocket_instant);
+    fn decrement(ctx: &Context, bucket_instant: u64) {
+        // get  bucket
+        let bucket_name = get_bucket_name(bucket_instant);
 
-        let timer = ctx.open_key_writable(&get_timer_name_from_pocket_name(&pocket_name));
+        let timer = ctx.open_key_writable(&get_timer_name_from_bucket_name(&bucket_name));
         let _ = timer.delete();
 
-        ctx.log_debug(&format!("Pocket instant: {}", &pocket_instant));
+        ctx.log_debug(&format!("Bucket instant: {}", &bucket_instant));
 
-        let pocket = ctx.open_key_writable(&pocket_name);
-        Pocket::decrement_runner(ctx, &pocket);
+        let bucket = ctx.open_key_writable(&bucket_name);
+        Bucket::decrement_runner(ctx, &bucket);
 
-        match pocket.delete() {
+        match bucket.delete() {
             Err(e) => ctx.log_warning(&format!("enountered error while deleting hashmap: {:?}", e)),
             Ok(_) => (),
         }
     }
+
+    pub fn get(ctx: &Context, args: Vec<String>) -> RedisResult {
+        let mut args = args.into_iter().skip(1);
+        let key_name = args.next_string()?;
+        let key_name = utils::get_captcha_key(&key_name);
+
+        let stored_captcha = ctx.open_key(&key_name);
+        if stored_captcha.key_type() == KeyType::Empty {
+            return errors::CacheError::new(format!("key {} not found", key_name)).into();
+        }
+
+        Ok(stored_captcha.read()?.unwrap().into())
+    }
+
+    pub fn counter_create(ctx: &Context, args: Vec<String>) -> RedisResult {
+        let mut args = args.into_iter().skip(1);
+        // mcaptcha captcha key name
+        let key_name = args.next_string()?;
+        // expiry
+        let duration = args.next_u64()?;
+        bucket::Bucket::increment(ctx, duration, &key_name)?;
+        REDIS_OK
+    }
 }
 
-pub static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
+pub static MCAPTCHA_BUCKET_TYPE: RedisType = RedisType::new(
     "mcaptbuck",
-    REDIS_MCAPTCHA_POCKET_TYPE_VERSION,
+    REDIS_MCAPTCHA_BUCKET_TYPE_VERSION,
     raw::RedisModuleTypeMethods {
         version: raw::REDISMODULE_TYPE_METHOD_VERSION as u64,
         rdb_load: Some(type_methods::rdb_load),
@@ -256,29 +279,29 @@ pub mod type_methods {
 
     #[allow(non_snake_case, unused)]
     pub extern "C" fn rdb_load(rdb: *mut raw::RedisModuleIO, encver: c_int) -> *mut c_void {
-        let pocket = match encver {
+        let bucket = match encver {
             0 => {
                 let data = raw::load_string(rdb);
                 let fmt = Format::JSON;
-                let pocket: Pocket = fmt.from_str(&data).unwrap();
-                pocket
+                let bucket: Bucket = fmt.from_str(&data).unwrap();
+                bucket
             }
             _ => panic!("Can't load old RedisJSON RDB"),
         };
 
-        //        if pocket.
-        Box::into_raw(Box::new(pocket)) as *mut c_void
+        //        if bucket.
+        Box::into_raw(Box::new(bucket)) as *mut c_void
     }
 
     pub unsafe extern "C" fn free(value: *mut c_void) {
-        let val = value as *mut Pocket;
+        let val = value as *mut Bucket;
         Box::from_raw(val);
     }
 
     #[allow(non_snake_case, unused)]
     pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
-        let pocket = &*(value as *mut Pocket);
-        match &serde_json::to_string(pocket) {
+        let bucket = &*(value as *mut Bucket);
+        match &serde_json::to_string(bucket) {
             Ok(string) => raw::save_string(rdb, &string),
             Err(e) => eprintln!("error while rdb_save: {}", e),
         }
