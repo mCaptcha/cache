@@ -13,7 +13,7 @@
 # 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from time import sleep
+from asyncio import sleep
 import sys
 
 import test
@@ -40,7 +40,7 @@ def assert_count(expect, key):
     count = get_count(key)
     assert count == expect
 
-def incr_one_works():
+async def incr_one_works():
     try:
         key = "incr_one"
         register(r, key)
@@ -50,14 +50,14 @@ def incr_one_works():
         incr(key, time)
         assert_count(initial_count + 1, key)
         # wait till expiry
-        sleep(time + 2)
+        await sleep(time + 2)
         assert_count(initial_count, key)
         print("Incr one works")
     except Exception as e:
         raise e
 
 
-def race_works():
+async def race_works():
     key = "race_works"
     try:
         register(r, key)
@@ -69,7 +69,7 @@ def race_works():
             incr(key, time)
         assert_count(initial_count + race_num, key)
         # wait till expiry
-        sleep(time + 2)
+        await sleep(time + 2)
         assert_count(initial_count, key)
         print("Race works")
     except Exception as e:

@@ -37,6 +37,6 @@ payload = json.dumps(MCAPTCHA)
 
 def register(r, key):
     if r.exists(key):
-        r.delete(key)
+       r.delete(key)
 
     r.execute_command(COMMANDS["ADD_CAPTCHA"], key, payload)

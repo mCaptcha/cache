@@ -14,7 +14,7 @@
 # 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+import asyncio
 from time import sleep
 
 from redis.client import Redis
@@ -31,12 +31,14 @@ r = utils.connect(REDIS_URL)
 utils.ping(r)
 
 
-def main():
+async def main():
     #runner = Runner()
     #fn = [bucket.incr_one_works]#, bucket.race_works]
 
-    bucket.incr_one_works()
-    bucket.race_works()
+    task1 = asyncio.create_task(bucket.incr_one_works())
+    task2 = asyncio.create_task(bucket.race_works())
+    await task1
+    await task2
 
     #try:
     #    for r in fn:
@@ -48,4 +50,4 @@ def main():
     #    raise e
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
