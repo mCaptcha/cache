@@ -77,7 +77,6 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
-<span id="77">77</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
@@ -97,8 +96,7 @@
  */</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::{<span class="ident">SystemTime</span>, <span class="ident">UNIX_EPOCH</span>};
 
-<span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">RedisError</span>;
-
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="kw-2">*</span>;
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
@@ -123,10 +121,10 @@
 }
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pocket_instant</span>(<span class="ident">duration</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">RedisError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pocket_instant</span>(<span class="ident">duration</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CacheResult</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">SystemTime</span>::<span class="ident">now</span>().<span class="ident">duration_since</span>(<span class="ident">UNIX_EPOCH</span>) {
         <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">val</span>.<span class="ident">as_secs</span>() <span class="op">+</span> <span class="ident">duration</span>),
-        <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">RedisError</span>::<span class="ident">String</span>(<span class="string">&quot;SystemTime before UNIX EPOCH!&quot;</span>.<span class="ident">into</span>())),
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">CacheError</span>::<span class="ident">new</span>(<span class="string">&quot;SystemTime before UNIX EPOCH!&quot;</span>.<span class="ident">into</span>())),
     }
 }
 

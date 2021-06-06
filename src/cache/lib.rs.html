@@ -97,6 +97,8 @@
 <span id="94">94</span>
 <span id="95">95</span>
 <span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
@@ -120,6 +122,8 @@
 <span class="kw">use</span> <span class="ident">redis_module</span>::{<span class="ident">Context</span>, <span class="ident">NextArg</span>, <span class="ident">RedisResult</span>, <span class="ident">REDIS_OK</span>};
 
 <span class="kw">mod</span> <span class="ident">errors</span>;
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>, <span class="ident">unused_features</span>, <span class="ident">unused_variables</span>)]</span>
+<span class="kw">mod</span> <span class="ident">mcaptcha</span>;
 <span class="kw">mod</span> <span class="ident">pocket</span>;
 <span class="kw">mod</span> <span class="ident">utils</span>;
 
