@@ -20,12 +20,14 @@ use redis_module::{NextArg, RedisResult, REDIS_OK};
 
 mod bucket;
 mod errors;
-#[allow(dead_code, unused_features, unused_variables)]
 mod mcaptcha;
+#[allow(dead_code, unused_features, unused_variables)]
+mod safety;
 mod utils;
 
 use bucket::MCAPTCHA_BUCKET_TYPE;
 use mcaptcha::MCAPTCHA_MCAPTCHA_TYPE;
+use safety::MCAPTCHA_SAFETY_TYPE;
 
 /// Initial allocation ammount of bucket[bucket::Bucket]
 pub const HIT_PER_SECOND: usize = 100;
@@ -43,6 +45,7 @@ pub const PKG_VERSION: usize = 1;
 // so, I guess it's okay for us to just use timer and not enfore pinning
 // and PKG_NAME
 pub const PREFIX_BUCKET_TIMER: &str = "timer:";
+pub const PREFIX_SAFETY: &str = "safety:";
 
 /// If buckets perform clean up at x instant, then buckets themselves will get cleaned
 /// up at x + BUCKET_EXPIRY_OFFSET(if they haven't already been cleaned up)
@@ -64,7 +67,7 @@ lazy_static! {
 redis_module! {
     name: "mcaptcha_cahce",
     version: PKG_VERSION,
-    data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE],
+    data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE],
     commands: [
         ["mcaptcha_cache.add_visitor", bucket::Bucket::counter_create, "write", 1, 1, 1],
         ["mcaptcha_cache.get", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
@@ -72,5 +75,6 @@ redis_module! {
     ],
    event_handlers: [
         [@EXPIRED @EVICTED: bucket::Bucket::on_delete],
+        //TODO add expire/evicted event for safety
     ]
 }

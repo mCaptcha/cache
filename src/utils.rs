@@ -54,6 +54,16 @@ pub fn get_captcha_key(name: &str) -> String {
 }
 
 #[inline]
+pub fn get_safety_name(mcaptcha_name: &str) -> String {
+    format!("{}{}", PREFIX_SAFETY, mcaptcha_name)
+}
+
+#[inline]
+pub fn get_mcaptcha_from_safety(safety_name: &str) -> Option<&str> {
+    safety_name.strip_prefix(&PREFIX_SAFETY)
+}
+
+#[inline]
 pub fn is_bucket_timer(name: &str) -> bool {
     name.contains(&*PREFIX_BUCKET_TIMER)
 }

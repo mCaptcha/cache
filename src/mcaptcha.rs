@@ -1,3 +1,4 @@
+use redis_module::key::RedisKey;
 use redis_module::RedisValue;
 /*
  * Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
@@ -78,10 +79,14 @@ impl MCaptcha {
     }
 
     /// get mcaptcha from redis key writable
-    pub fn get_mcaptcha<'a>(
-        ctx: &Context,
-        key: &'a RedisKeyWritable,
-    ) -> CacheResult<Option<&'a mut Self>> {
+    #[inline]
+    pub fn get_mut_mcaptcha<'a>(key: &'a RedisKeyWritable) -> CacheResult<Option<&'a mut Self>> {
+        Ok(key.get_value::<Self>(&MCAPTCHA_MCAPTCHA_TYPE)?)
+    }
+
+    /// get mcaptcha from redis key
+    #[inline]
+    pub fn get_mcaptcha<'a>(key: &'a RedisKey) -> CacheResult<Option<&'a Self>> {
         Ok(key.get_value::<Self>(&MCAPTCHA_MCAPTCHA_TYPE)?)
     }
 

@@ -127,7 +127,7 @@ impl Bucket {
                     if stored_captcha.key_type() == KeyType::Empty {
                         continue;
                     }
-                    let captcha = MCaptcha::get_mcaptcha(&ctx, &stored_captcha)
+                    let captcha = MCaptcha::get_mut_mcaptcha(&stored_captcha)
                         .unwrap()
                         .unwrap();
                     captcha.decrement_visitor_by(count);
@@ -165,7 +165,7 @@ impl Bucket {
         ctx.log_debug(&captcha_name);
         // increment
         let captcha = ctx.open_key_writable(&captcha_name);
-        let captcha = MCaptcha::get_mcaptcha(ctx, &captcha)?;
+        let captcha = MCaptcha::get_mut_mcaptcha(&captcha)?;
 
         match captcha {
             Some(val) => val.add_visitor(),
