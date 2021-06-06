@@ -16,7 +16,6 @@
  */
 
 use std::collections::HashMap;
-use std::os::raw::c_void;
 use std::time::Duration;
 //use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -24,11 +23,11 @@ use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
 use redis_module::NotifyEvent;
-use redis_module::RedisError;
+//use redis_module::RedisError;
 use redis_module::{raw, Context};
 use serde::{Deserialize, Serialize};
 
-use crate::errors::CacheError;
+use crate::errors::*;
 use crate::utils::*;
 use crate::*;
 
@@ -36,6 +35,20 @@ use crate::*;
 /// encoding formats for persistence
 pub enum Format {
     JSON,
+}
+
+impl Format {
+    #[inline]
+    pub fn parse_str<'a, T: Deserialize<'a>>(&self, data: &'a str) -> CacheResult<T> {
+        match self {
+            Format::JSON => Ok(serde_json::from_str(data)?),
+        }
+    }
+
+    #[inline]
+    pub fn from_str<'a, T: Deserialize<'a>>(&self, data: &'a str) -> CacheResult<T> {
+        Ok(self.parse_str(data)?)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -78,7 +91,7 @@ impl Pocket {
 
     /// creates new pocket and sets off timer to go off at `duration`
     #[inline]
-    pub fn new(ctx: &Context, duration: u64) -> Result<Self, RedisError> {
+    pub fn new(ctx: &Context, duration: u64) -> CacheResult<Self> {
         let decrement = HashMap::with_capacity(HIT_PER_SECOND);
 
         let pocket_instant = get_pocket_instant(duration)?;
@@ -98,7 +111,7 @@ impl Pocket {
 
     /// increments count of key = captcha and registers for auto decrement
     #[inline]
-    pub fn increment(ctx: &Context, duration: u64, captcha: &str) -> Result<(), RedisError> {
+    pub fn increment(ctx: &Context, duration: u64, captcha: &str) -> CacheResult<()> {
         let captcha_name = get_captcha_key(captcha);
         ctx.log_debug(&captcha_name);
         // increment
@@ -206,22 +219,10 @@ impl Pocket {
             Ok(_) => (),
         }
     }
-
-    #[inline]
-    pub fn parse_str(data: &str, format: Format) -> Result<Pocket, CacheError> {
-        match format {
-            Format::JSON => Ok(serde_json::from_str(data)?),
-        }
-    }
-
-    #[inline]
-    pub fn from_str(data: &str, format: Format) -> Result<Self, CacheError> {
-        Ok(Pocket::parse_str(data, format)?)
-    }
 }
 
 pub static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
-    "mcaptchac",
+    "mcaptbuck",
     REDIS_MCAPTCHA_POCKET_TYPE_VERSION,
     raw::RedisModuleTypeMethods {
         version: raw::REDISMODULE_TYPE_METHOD_VERSION as u64,
@@ -247,6 +248,8 @@ pub static MCAPTCHA_POCKET_TYPE: RedisType = RedisType::new(
 );
 
 pub mod type_methods {
+    use std::os::raw::c_void;
+
     use libc::c_int;
 
     use super::*;
@@ -256,7 +259,9 @@ pub mod type_methods {
         let pocket = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-                Pocket::from_str(&data, Format::JSON).unwrap()
+                let fmt = Format::JSON;
+                let pocket: Pocket = fmt.from_str(&data).unwrap();
+                pocket
             }
             _ => panic!("Can't load old RedisJSON RDB"),
         };

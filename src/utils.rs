@@ -16,8 +16,7 @@
  */
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use redis_module::RedisError;
-
+use crate::errors::*;
 use crate::*;
 
 #[inline]
@@ -42,10 +41,10 @@ pub fn get_pocket_name_from_timer_name(name: &str) -> Option<&str> {
 }
 
 #[inline]
-pub fn get_pocket_instant(duration: u64) -> Result<u64, RedisError> {
+pub fn get_pocket_instant(duration: u64) -> CacheResult<u64> {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
         Ok(val) => Ok(val.as_secs() + duration),
-        Err(_) => Err(RedisError::String("SystemTime before UNIX EPOCH!".into())),
+        Err(_) => Err(CacheError::new("SystemTime before UNIX EPOCH!".into())),
     }
 }
 

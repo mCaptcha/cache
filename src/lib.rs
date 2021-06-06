@@ -20,6 +20,8 @@ use redis_module::{redis_command, redis_event_handler, redis_module};
 use redis_module::{Context, NextArg, RedisResult, REDIS_OK};
 
 mod errors;
+#[allow(dead_code, unused_features, unused_variables)]
+mod mcaptcha;
 mod pocket;
 mod utils;
 

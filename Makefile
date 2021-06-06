@@ -21,6 +21,12 @@ docker-run:
 		--publish 6379:6379 \
 		$(DOCKER_IMG)
 
+run-redis-server:
+	redis-server  --loadmodule ./target/release/libcache.so &
+
+stop-redis-server:
+	killall redis-server
+
 dev-env:
 	./scripts/setup.sh
 

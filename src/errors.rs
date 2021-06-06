@@ -15,43 +15,70 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::num::ParseIntError;
+
+use redis_module::RedisError;
+use redis_module::RedisResult;
+
 #[derive(Debug)]
-pub struct CacheError {
-    pub msg: String,
+pub enum CacheError {
+    Msg(String),
+    RedisError(redis_module::RedisError),
 }
 
 impl CacheError {
     pub fn new(msg: String) -> Self {
-        Self { msg }
+        CacheError::Msg(msg)
     }
 }
 
 impl From<String> for CacheError {
     fn from(e: String) -> Self {
-        CacheError { msg: e }
+        CacheError::Msg(e.to_string())
     }
 }
 
 impl From<&str> for CacheError {
     fn from(e: &str) -> Self {
-        CacheError { msg: e.to_string() }
+        CacheError::Msg(e.to_string())
     }
 }
 
 impl From<serde_json::Error> for CacheError {
     fn from(e: serde_json::Error) -> Self {
-        CacheError { msg: e.to_string() }
+        CacheError::Msg(e.to_string())
     }
 }
 
-impl From<CacheError> for redis_module::RedisError {
-    fn from(e: CacheError) -> Self {
-        redis_module::RedisError::String(e.msg)
+impl From<redis_module::RedisError> for CacheError {
+    fn from(e: redis_module::RedisError) -> Self {
+        CacheError::RedisError(e)
     }
 }
 
-impl From<CacheError> for redis_module::RedisResult {
+impl From<CacheError> for RedisError {
     fn from(e: CacheError) -> Self {
-        Err(redis_module::RedisError::String(e.msg))
+        match e {
+            CacheError::Msg(val) => RedisError::String(val),
+            CacheError::RedisError(val) => val,
+        }
     }
 }
+
+impl From<ParseIntError> for CacheError {
+    fn from(e: ParseIntError) -> Self {
+        let err: RedisError = e.into();
+        CacheError::RedisError(err)
+    }
+}
+
+impl From<CacheError> for RedisResult {
+    fn from(e: CacheError) -> Self {
+        match e {
+            CacheError::Msg(val) => Err(RedisError::String(val)),
+            CacheError::RedisError(val) => Err(val),
+        }
+    }
+}
+
+pub type CacheResult<T> = Result<T, CacheError>;
