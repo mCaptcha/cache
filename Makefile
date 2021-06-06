@@ -7,7 +7,7 @@ default:
 
 test: 
 	cargo test  --all --all-features --no-fail-fast
-	./tests/test.py
+	. ./tests/venv/bin/activate; ./tests/test.py
 
 docker-build:
 	docker build -t $(DOCKER_IMG) .

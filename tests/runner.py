@@ -1,5 +1,3 @@
-#!/bin/env python3 
-#
 # Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
 # 
 # This program is free software: you can redistribute it and/or modify
@@ -14,33 +12,25 @@
 # 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from threading import Thread
 
-from time import sleep
+class Runner(object):
+    _functions = []
+    _threads = []
 
-from redis.client import Redis
-from redis import BlockingConnectionPool
+    """ Register functions to be run"""
+    def register(self, fn):
+        self._functions.append(fn)
+        t = Thread(target=fn)
+        t.start()
+        self._threads.append(t)
 
-import utils
-from runner import Runner
-import bucket
+    """Wait for registered functions to finish executing"""
+    def wait(self):
+        for thread in self._threads:
+            thread.join()
 
-REDIS_URL = "redis://localhost:6350"
-
-
-r = utils.connect(REDIS_URL)
-utils.ping(r)
-
-
-def main():
-    runner = Runner()
-    fn = [bucket.incr_one_works, bucket.race_works]
-    for r in fn:
-        runner.register(r)
-
-    runner.wait()
-
-    print("All tests passed")
-
-
-if __name__ == "__main__":
-    main()
+    """Runs in seperate threads"""
+    def __init__(self):
+        super(Runner, self).__init__()
+#        self.arg = arg

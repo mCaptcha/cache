@@ -1,3 +1,4 @@
+
 #!/bin/env python3 
 #
 # Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
@@ -15,32 +16,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from time import sleep
-
 from redis.client import Redis
 from redis import BlockingConnectionPool
 
-import utils
-from runner import Runner
-import bucket
+"""Connect to redis instance"""
+def connect(url):
+    r = Redis(connection_pool=BlockingConnectionPool(max_connections=4))
+    r.from_url(url)
+    return r
 
-REDIS_URL = "redis://localhost:6350"
-
-
-r = utils.connect(REDIS_URL)
-utils.ping(r)
-
-
-def main():
-    runner = Runner()
-    fn = [bucket.incr_one_works, bucket.race_works]
-    for r in fn:
-        runner.register(r)
-
-    runner.wait()
-
-    print("All tests passed")
-
-
-if __name__ == "__main__":
-    main()
+"""Ping Redis Instance"""
+def ping(r):
+    resp = r.ping()
+    assert resp is True
