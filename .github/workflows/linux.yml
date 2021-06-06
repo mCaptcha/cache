@@ -80,7 +80,7 @@ jobs:
 
       - name: generate documentation
         if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
-        run: make docs
+        run: make doc
 
         #      - name: generate documentation
         #        if: matrix.version == 'stable' && (github.repository == 'realaravinth/damn-vuln-blockchain')

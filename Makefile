@@ -30,8 +30,6 @@ stop-redis-server:
 dev-env:
 	./scripts/setup.sh
 
-docs:
-	cargo doc --no-deps --workspace --all-features
 
 xml-test-coverage:
 	cargo tarpaulin -t 1200 --out Xml --all --all-features --no-fail-fast
@@ -40,6 +38,9 @@ coverage:
 	cargo tarpaulin -t 1200 --out Html --all --all-features --no-fail-fast
 dev:
 	cargo build
+
+doc:
+	cargo doc --no-deps --workspace --all-features
 
 clean:
 	cargo clean
@@ -51,7 +52,7 @@ help:
 	@echo  '  docker-run              - run docker container'
 	@echo  '  docker-stop             - stop docker container'
 	@echo  '  dev-env                 - setup dev env'
-	@echo  '  docs                    - build documentation'
+	@echo  '  doc                     - build documentation'
 	@echo  '  clean                   - drop builds and environments'
 	@echo  '  coverage                - build test coverage in HTML format'
 	@echo  '  xml-coverage            - build test coverage in XML for upload to codecov'
