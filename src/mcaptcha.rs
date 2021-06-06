@@ -14,16 +14,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+//use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
+use redis_module::raw::KeyType;
+use redis_module::{Context, RedisResult};
+//use redis_module::RedisError;
 use redis_module::raw;
+
 use serde::{Deserialize, Serialize};
 
 use crate::bucket::Format;
+use crate::errors::*;
+use crate::utils;
 
 const REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION: i32 = 1;
 
 #[derive(Serialize, Deserialize)]
-struct MCaptcha {
+pub struct MCaptcha {
     m: libmcaptcha::MCaptcha,
 }
 
@@ -57,10 +64,26 @@ impl MCaptcha {
     pub fn get_visitors(&self) -> u32 {
         self.m.get_visitors()
     }
+
+    /// Get counter value
+    pub fn get(ctx: &Context, args: Vec<String>) -> RedisResult {
+        use redis_module::NextArg;
+
+        let mut args = args.into_iter().skip(1);
+        let key_name = args.next_string()?;
+        let key_name = utils::get_captcha_key(&key_name);
+
+        let stored_captcha = ctx.open_key(&key_name);
+        if stored_captcha.key_type() == KeyType::Empty {
+            return CacheError::new(format!("key {} not found", key_name)).into();
+        }
+
+        Ok(stored_captcha.read()?.unwrap().into())
+    }
 }
 
 pub static MCAPTCHA_MCAPTCHA_TYPE: RedisType = RedisType::new(
-    "mcaptmcapa",
+    "mcaptmcap",
     REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION,
     raw::RedisModuleTypeMethods {
         version: raw::REDISMODULE_TYPE_METHOD_VERSION as u64,

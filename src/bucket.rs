@@ -91,7 +91,7 @@ impl Bucket {
 
     /// creates new bucket and sets off timer to go off at `duration`
     #[inline]
-    pub fn new(ctx: &Context, duration: u64) -> CacheResult<Self> {
+    fn new(ctx: &Context, duration: u64) -> CacheResult<Self> {
         let decrement = HashMap::with_capacity(HIT_PER_SECOND);
 
         let bucket_instant = get_bucket_instant(duration)?;
@@ -111,7 +111,7 @@ impl Bucket {
 
     /// increments count of key = captcha and registers for auto decrement
     #[inline]
-    pub fn increment(ctx: &Context, duration: u64, captcha: &str) -> CacheResult<()> {
+    fn increment(ctx: &Context, duration: u64, captcha: &str) -> CacheResult<()> {
         let captcha_name = get_captcha_key(captcha);
         ctx.log_debug(&captcha_name);
         // increment
@@ -220,19 +220,7 @@ impl Bucket {
         }
     }
 
-    pub fn get(ctx: &Context, args: Vec<String>) -> RedisResult {
-        let mut args = args.into_iter().skip(1);
-        let key_name = args.next_string()?;
-        let key_name = utils::get_captcha_key(&key_name);
-
-        let stored_captcha = ctx.open_key(&key_name);
-        if stored_captcha.key_type() == KeyType::Empty {
-            return errors::CacheError::new(format!("key {} not found", key_name)).into();
-        }
-
-        Ok(stored_captcha.read()?.unwrap().into())
-    }
-
+    /// Create new counter
     pub fn counter_create(ctx: &Context, args: Vec<String>) -> RedisResult {
         let mut args = args.into_iter().skip(1);
         // mcaptcha captcha key name

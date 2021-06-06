@@ -25,6 +25,7 @@ mod mcaptcha;
 mod utils;
 
 use bucket::MCAPTCHA_BUCKET_TYPE;
+use mcaptcha::MCAPTCHA_MCAPTCHA_TYPE;
 
 /// Initial allocation ammount of bucket[bucket::Bucket]
 pub const HIT_PER_SECOND: usize = 100;
@@ -63,10 +64,10 @@ lazy_static! {
 redis_module! {
     name: "mcaptcha_cahce",
     version: PKG_VERSION,
-    data_types: [MCAPTCHA_BUCKET_TYPE,],
+    data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE],
     commands: [
         ["mcaptcha_cache.count", bucket::Bucket::counter_create, "write", 1, 1, 1],
-        ["mcaptcha_cache.get", bucket::Bucket::get, "readonly", 1, 1, 1],
+        ["mcaptcha_cache.get", mcaptcha::MCaptcha::get, "readonly", 1, 1, 1],
     ],
    event_handlers: [
         [@EXPIRED @EVICTED: bucket::Bucket::on_delete],
