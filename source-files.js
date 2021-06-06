@@ -1,3 +1,3 @@
 var N = null;var sourcesIndex = {};
-sourcesIndex["cache"] = {"name":"","files":["errors.rs","lib.rs","mcaptcha.rs","pocket.rs","utils.rs"]};
+sourcesIndex["cache"] = {"name":"","files":["bucket.rs","errors.rs","lib.rs","mcaptcha.rs","utils.rs"]};
 createSourceSidebar();

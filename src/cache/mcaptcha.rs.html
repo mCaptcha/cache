@@ -146,7 +146,7 @@
 <span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">raw</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pocket</span>::<span class="ident">Format</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bucket</span>::<span class="ident">Format</span>;
 
 <span class="kw">const</span> <span class="ident">REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">1</span>;
 
@@ -187,7 +187,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">MCAPTCHA_POCKET_TYPE</span>: <span class="ident">RedisType</span> <span class="op">=</span> <span class="ident">RedisType</span>::<span class="ident">new</span>(
+<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">MCAPTCHA_MCAPTCHA_TYPE</span>: <span class="ident">RedisType</span> <span class="op">=</span> <span class="ident">RedisType</span>::<span class="ident">new</span>(
     <span class="string">&quot;mcaptmcapa&quot;</span>,
     <span class="ident">REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION</span>,
     <span class="ident">raw</span>::<span class="ident">RedisModuleTypeMethods</span> {
