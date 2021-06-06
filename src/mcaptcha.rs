@@ -1,3 +1,4 @@
+use redis_module::RedisValue;
 /*
  * Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
  *
@@ -14,10 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-//use redis_module::key::RedisKeyWritable;
+use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
 use redis_module::{Context, RedisResult};
+use redis_module::{NextArg, REDIS_OK};
 //use redis_module::RedisError;
 use redis_module::raw;
 
@@ -25,9 +27,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::bucket::Format;
 use crate::errors::*;
-use crate::utils;
+use crate::utils::*;
 
-const REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION: i32 = 1;
+const REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION: i32 = 0;
 
 #[derive(Serialize, Deserialize)]
 pub struct MCaptcha {
@@ -35,6 +37,10 @@ pub struct MCaptcha {
 }
 
 impl MCaptcha {
+    #[inline]
+    fn new(m: libmcaptcha::MCaptcha) -> Self {
+        MCaptcha { m }
+    }
     /// increments the visitor count by one
     #[inline]
     pub fn add_visitor(&mut self) {
@@ -53,32 +59,61 @@ impl MCaptcha {
         self.m.get_difficulty()
     }
 
-    /// get [Counter]'s lifetime
+    /// get [MCaptcha]'s lifetime
     #[inline]
     pub fn get_duration(&self) -> u64 {
         self.m.get_duration()
     }
 
-    /// get [Counter]'s current visitor_threshold
+    /// get [MCaptcha]'s current visitor_threshold
     #[inline]
     pub fn get_visitors(&self) -> u32 {
         self.m.get_visitors()
     }
 
-    /// Get counter value
-    pub fn get(ctx: &Context, args: Vec<String>) -> RedisResult {
-        use redis_module::NextArg;
+    /// decrement [MCaptcha]'s current visitor_threshold by specified count
+    #[inline]
+    pub fn decrement_visitor_by(&mut self, count: u32) {
+        self.m.decrement_visitor_by(count)
+    }
 
+    /// get mcaptcha from redis key writable
+    pub fn get_mcaptcha<'a>(
+        ctx: &Context,
+        key: &'a RedisKeyWritable,
+    ) -> CacheResult<Option<&'a mut Self>> {
+        Ok(key.get_value::<Self>(&MCAPTCHA_MCAPTCHA_TYPE)?)
+    }
+
+    /// Get counter value
+    pub fn get_count(ctx: &Context, args: Vec<String>) -> RedisResult {
         let mut args = args.into_iter().skip(1);
         let key_name = args.next_string()?;
-        let key_name = utils::get_captcha_key(&key_name);
+        let key_name = get_captcha_key(&key_name);
 
         let stored_captcha = ctx.open_key(&key_name);
         if stored_captcha.key_type() == KeyType::Empty {
             return CacheError::new(format!("key {} not found", key_name)).into();
         }
 
-        Ok(stored_captcha.read()?.unwrap().into())
+        match stored_captcha.get_value::<Self>(&MCAPTCHA_MCAPTCHA_TYPE)? {
+            Some(val) => Ok(RedisValue::Integer(val.get_visitors().into())),
+            None => return Err(CacheError::CaptchaNotFound.into()),
+        }
+    }
+
+    /// Add captcha to redis
+    pub fn add_captcha(ctx: &Context, args: Vec<String>) -> RedisResult {
+        let mut args = args.into_iter().skip(1);
+        let key_name = get_captcha_key(&args.next_string()?);
+        let json = args.next_string()?;
+        let mcaptcha: libmcaptcha::MCaptcha = Format::JSON.from_str(&json)?;
+        let mcaptcha = Self::new(mcaptcha);
+
+        let key = ctx.open_key_writable(&&key_name);
+        key.set_value(&MCAPTCHA_MCAPTCHA_TYPE, mcaptcha)?;
+
+        REDIS_OK
     }
 }
 
@@ -120,12 +155,10 @@ pub mod type_methods {
         let mcaptcha = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-
-                let fmt = Format::JSON;
-                let mcaptcha: MCaptcha = fmt.from_str(&data).unwrap();
+                let mcaptcha: MCaptcha = Format::JSON.from_str(&data).unwrap();
                 mcaptcha
             }
-            _ => panic!("Can't load old RedisJSON RDB"),
+            _ => panic!("Can't load mCaptcha from old redis RDB"),
         };
 
         Box::into_raw(Box::new(mcaptcha)) as *mut c_void
@@ -141,7 +174,7 @@ pub mod type_methods {
         let mcaptcha = &*(value as *mut MCaptcha);
         match &serde_json::to_string(mcaptcha) {
             Ok(string) => raw::save_string(rdb, &string),
-            Err(e) => eprintln!("error while rdb_save: {}", e),
+            Err(e) => panic!("error while rdb_save: {}", e),
         }
     }
 }

@@ -1,6 +1,5 @@
-#!/bin/env python3 
-#
-# Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
+#!/bin/env /usr/bin/python3
+# # Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -15,13 +14,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from time import sleep
+import sys
 
-import test;
+import test
+from mcaptcha import register
 
 r = test.r
 
 COMMANDS = {
-"COUNT" : "mcaptcha_cache.count",
+"COUNT" : "mcaptcha_cache.add_visitor",
 "GET" : "mcaptcha_cache.get",
 }
 
@@ -40,27 +41,36 @@ def assert_count(expect, key):
     assert count == expect
 
 def incr_one_works():
-    key = "incr_one"
-    time = 2
-    initial_count = get_count(key)
-    # incriment
-    incr(key, time)
-    assert_count(initial_count + 1, key)
-    # wait till expiry
-    sleep(time + 2)
-    assert_count(initial_count, key)
-    print("Incr one works")
+    try:
+        key = "incr_one"
+        register(r, key)
+        time = 2
+        initial_count = get_count(key)
+        # incriment
+        incr(key, time)
+        assert_count(initial_count + 1, key)
+        # wait till expiry
+        sleep(time + 2)
+        assert_count(initial_count, key)
+        print("Incr one works")
+    except Exception as e:
+        raise e
+
 
 def race_works():
     key = "race_works"
-    initial_count = get_count(key)
-    race_num = 200
-    time = 3
+    try:
+        register(r, key)
+        initial_count = get_count(key)
+        race_num = 200
+        time = 3
 
-    for _ in range(race_num):
-        incr(key, time)
-    assert_count(initial_count + race_num, key)
-    # wait till expiry
-    sleep(time + 2)
-    assert_count(initial_count, key)
-    print("Race works")
+        for _ in range(race_num):
+            incr(key, time)
+        assert_count(initial_count + race_num, key)
+        # wait till expiry
+        sleep(time + 2)
+        assert_count(initial_count, key)
+        print("Race works")
+    except Exception as e:
+        raise e

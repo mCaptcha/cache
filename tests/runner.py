@@ -1,3 +1,4 @@
+#!/bin/env /usr/bin/python3
 # Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
 # 
 # This program is free software: you can redistribute it and/or modify
@@ -22,13 +23,24 @@ class Runner(object):
     def register(self, fn):
         self._functions.append(fn)
         t = Thread(target=fn)
-        t.start()
         self._threads.append(t)
 
     """Wait for registered functions to finish executing"""
-    def wait(self):
+
+    def __run__(self):
         for thread in self._threads:
-            thread.join()
+            try:
+                thread.start()
+            except:
+                print("yo")
+
+    def wait(self):
+        self.__run__()
+        for thread in self._threads:
+            try:
+                thread.join()
+            except:
+                print("yo")
 
     """Runs in seperate threads"""
     def __init__(self):

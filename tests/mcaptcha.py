@@ -15,16 +15,28 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from redis.client import Redis
-from redis import BlockingConnectionPool
+import json
 
-"""Connect to redis instance"""
-def connect(url):
-    r = Redis(connection_pool=BlockingConnectionPool(max_connections=4))
-    r.from_url(url)
-    return r
+MCAPTCHA = {
+  "visitor_threshold": 0,
+  "defense": {
+    "levels": [
+      {"visitor_threshold": 50, "difficulty_factor": 50},
+      {"visitor_threshold": 500, "difficulty_factor": 500}
+    ],
+    "current_visitor_threshold": 0
+  },
+  "duration": 5
+}
 
-"""Ping Redis Instance"""
-def ping(r):
-    resp = r.ping()
-    assert resp is True
+COMMANDS = {
+    "ADD_CAPTCHA": "MCAPTCHA_CACHE.ADD_CAPTCHA",
+}
+
+payload = json.dumps(MCAPTCHA)
+
+def register(r, key):
+    if r.exists(key):
+        r.delete(key)
+
+    r.execute_command(COMMANDS["ADD_CAPTCHA"], key, payload)

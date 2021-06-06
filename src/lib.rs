@@ -56,7 +56,7 @@ lazy_static! {
         rng.gen()
     };
     /// counter/captcha key prefix
-    pub static ref PREFIX_COUNTER: String = format!("{}:captcha:{}:", PKG_NAME, *ID);
+    pub static ref PREFIX_CAPTCHA: String = format!("{}:captcha::", PKG_NAME);
     /// bucket key prefix
     pub static ref PREFIX_BUCKET: String = format!("{}:bucket:{{{}}}:", PKG_NAME, *ID);
 }
@@ -66,8 +66,9 @@ redis_module! {
     version: PKG_VERSION,
     data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE],
     commands: [
-        ["mcaptcha_cache.count", bucket::Bucket::counter_create, "write", 1, 1, 1],
-        ["mcaptcha_cache.get", mcaptcha::MCaptcha::get, "readonly", 1, 1, 1],
+        ["mcaptcha_cache.add_visitor", bucket::Bucket::counter_create, "write", 1, 1, 1],
+        ["mcaptcha_cache.get", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
+        ["mcaptcha_cache.add_captcha", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
     ],
    event_handlers: [
         [@EXPIRED @EVICTED: bucket::Bucket::on_delete],

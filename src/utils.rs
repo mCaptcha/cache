@@ -50,7 +50,7 @@ pub fn get_bucket_instant(duration: u64) -> CacheResult<u64> {
 
 #[inline]
 pub fn get_captcha_key(name: &str) -> String {
-    format!("{}{}", &*PREFIX_COUNTER, name)
+    format!("{}{}", &*PREFIX_CAPTCHA, name)
 }
 
 #[inline]

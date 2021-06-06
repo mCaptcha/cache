@@ -28,6 +28,7 @@ use redis_module::{raw, Context};
 use serde::{Deserialize, Serialize};
 
 use crate::errors::*;
+use crate::mcaptcha::MCaptcha;
 use crate::utils::*;
 use crate::*;
 
@@ -58,7 +59,7 @@ pub struct Bucket {
     /// instant(seconds from UNIX_EPOCH) at which time bucket begins decrement process
     bucket_instant: u64,
     /// a list of captcha keys that should be decremented during clean up
-    decrement: HashMap<String, usize>,
+    decrement: HashMap<String, u32>,
 }
 
 impl Bucket {
@@ -109,6 +110,54 @@ impl Bucket {
         Ok(bucket)
     }
 
+    /// decrement runner that decrements all registered counts _without_ cleaning after itself
+    /// use [decrement] when you require auto cleanup. Internally, it calls this method.
+    #[inline]
+    fn decrement_runner(ctx: &Context, key: &RedisKeyWritable) {
+        let val = key.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE).unwrap();
+        match val {
+            Some(bucket) => {
+                ctx.log_debug(&format!("entering loop hashmap "));
+                for (captcha, count) in bucket.decrement.drain() {
+                    ctx.log_debug(&format!(
+                        "reading captcha: {} with decr count {}",
+                        &captcha, count
+                    ));
+                    let stored_captcha = ctx.open_key_writable(&captcha);
+                    if stored_captcha.key_type() == KeyType::Empty {
+                        continue;
+                    }
+                    let captcha = MCaptcha::get_mcaptcha(&ctx, &stored_captcha)
+                        .unwrap()
+                        .unwrap();
+                    captcha.decrement_visitor_by(count);
+                }
+            }
+            None => {
+                ctx.log_debug(&format!("bucket not found, can't decrement"));
+            }
+        }
+    }
+
+    /// executes when timer goes off. Decrements all registered counts and cleans itself up
+    fn decrement(ctx: &Context, bucket_instant: u64) {
+        // get  bucket
+        let bucket_name = get_bucket_name(bucket_instant);
+
+        let timer = ctx.open_key_writable(&get_timer_name_from_bucket_name(&bucket_name));
+        let _ = timer.delete();
+
+        ctx.log_debug(&format!("Bucket instant: {}", &bucket_instant));
+
+        let bucket = ctx.open_key_writable(&bucket_name);
+        Bucket::decrement_runner(ctx, &bucket);
+
+        match bucket.delete() {
+            Err(e) => ctx.log_warning(&format!("enountered error while deleting hashmap: {:?}", e)),
+            Ok(_) => (),
+        }
+    }
+
     /// increments count of key = captcha and registers for auto decrement
     #[inline]
     fn increment(ctx: &Context, duration: u64, captcha: &str) -> CacheResult<()> {
@@ -116,20 +165,11 @@ impl Bucket {
         ctx.log_debug(&captcha_name);
         // increment
         let captcha = ctx.open_key_writable(&captcha_name);
+        let captcha = MCaptcha::get_mcaptcha(ctx, &captcha)?;
 
-        match captcha.read()? {
-            Some(val) => {
-                if val.trim().is_empty() {
-                    captcha.write("1")?;
-                } else {
-                    let mut val: usize = val.parse()?;
-                    val += 1;
-                    captcha.write(&val.to_string())?;
-                }
-            }
-            None => {
-                captcha.write("1")?;
-            }
+        match captcha {
+            Some(val) => val.add_visitor(),
+            None => return Err(CacheError::new("Captcha not found".into())),
         }
 
         let bucket_instant = get_bucket_instant(duration)?;
@@ -159,65 +199,6 @@ impl Bucket {
         };
 
         Ok(())
-    }
-
-    /// decrement runner that decrements all registered counts _without_ cleaning after itself
-    /// use [decrement] when you require auto cleanup. Internally, it calls this method.
-    #[inline]
-    fn decrement_runner(ctx: &Context, key: &RedisKeyWritable) {
-        let val = key.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE).unwrap();
-        match val {
-            Some(bucket) => {
-                ctx.log_debug(&format!("entering loop hashmap "));
-                for (captcha, count) in bucket.decrement.drain() {
-                    ctx.log_debug(&format!(
-                        "reading captcha: {} with decr count {}",
-                        &captcha, count
-                    ));
-                    let stored_captcha = ctx.open_key_writable(&captcha);
-                    if stored_captcha.key_type() == KeyType::Empty {
-                        continue;
-                    }
-
-                    let mut stored_count: usize =
-                        stored_captcha.read().unwrap().unwrap().parse().unwrap();
-                    stored_count -= count;
-                    if stored_count == 0 {
-                        match stored_captcha.delete() {
-                            Err(e) => ctx.log_warning(&format!(
-                                "Error occured while cleaning up captcha when it became 0: {}",
-                                e
-                            )),
-                            Ok(_) => (),
-                        }
-                    } else {
-                        stored_captcha.write(&stored_count.to_string()).unwrap();
-                    }
-                }
-            }
-            None => {
-                ctx.log_debug(&format!("bucket not found, can't decrement"));
-            }
-        }
-    }
-
-    /// executes when timer goes off. Decrements all registered counts and cleans itself up
-    fn decrement(ctx: &Context, bucket_instant: u64) {
-        // get  bucket
-        let bucket_name = get_bucket_name(bucket_instant);
-
-        let timer = ctx.open_key_writable(&get_timer_name_from_bucket_name(&bucket_name));
-        let _ = timer.delete();
-
-        ctx.log_debug(&format!("Bucket instant: {}", &bucket_instant));
-
-        let bucket = ctx.open_key_writable(&bucket_name);
-        Bucket::decrement_runner(ctx, &bucket);
-
-        match bucket.delete() {
-            Err(e) => ctx.log_warning(&format!("enountered error while deleting hashmap: {:?}", e)),
-            Ok(_) => (),
-        }
     }
 
     /// Create new counter
@@ -270,11 +251,10 @@ pub mod type_methods {
         let bucket = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-                let fmt = Format::JSON;
-                let bucket: Bucket = fmt.from_str(&data).unwrap();
+                let bucket: Bucket = Format::JSON.from_str(&data).unwrap();
                 bucket
             }
-            _ => panic!("Can't load old RedisJSON RDB"),
+            _ => panic!("Can't load bucket from old redis RDB"),
         };
 
         //        if bucket.

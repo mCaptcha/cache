@@ -17,13 +17,18 @@
 
 use std::num::ParseIntError;
 
+use derive_more::Display;
 use redis_module::RedisError;
 use redis_module::RedisResult;
 
-#[derive(Debug)]
+#[derive(Debug, Display)]
 pub enum CacheError {
+    #[display(fmt = "{}", &_0)]
     Msg(String),
+    #[display(fmt = "{}", &_0.to_string)]
     RedisError(redis_module::RedisError),
+    #[display(fmt = "Captcha not found")]
+    CaptchaNotFound,
 }
 
 impl CacheError {
@@ -50,18 +55,9 @@ impl From<serde_json::Error> for CacheError {
     }
 }
 
-impl From<redis_module::RedisError> for CacheError {
+impl From<RedisError> for CacheError {
     fn from(e: redis_module::RedisError) -> Self {
         CacheError::RedisError(e)
-    }
-}
-
-impl From<CacheError> for RedisError {
-    fn from(e: CacheError) -> Self {
-        match e {
-            CacheError::Msg(val) => RedisError::String(val),
-            CacheError::RedisError(val) => val,
-        }
     }
 }
 
@@ -74,9 +70,16 @@ impl From<ParseIntError> for CacheError {
 
 impl From<CacheError> for RedisResult {
     fn from(e: CacheError) -> Self {
+        Self::Err(e.into())
+    }
+}
+
+impl From<CacheError> for RedisError {
+    fn from(e: CacheError) -> Self {
         match e {
-            CacheError::Msg(val) => Err(RedisError::String(val)),
-            CacheError::RedisError(val) => Err(val),
+            CacheError::Msg(val) => RedisError::String(val),
+            CacheError::RedisError(val) => val,
+            CacheError::CaptchaNotFound => RedisError::String(format!("{}", e)),
         }
     }
 }

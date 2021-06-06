@@ -1,4 +1,4 @@
-#!/bin/env python3 
+#!/bin/env /usr/bin/python3
 #
 # Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
 # 
@@ -32,15 +32,20 @@ utils.ping(r)
 
 
 def main():
-    runner = Runner()
-    fn = [bucket.incr_one_works, bucket.race_works]
-    for r in fn:
-        runner.register(r)
+    #runner = Runner()
+    #fn = [bucket.incr_one_works]#, bucket.race_works]
 
-    runner.wait()
+    bucket.incr_one_works()
+    bucket.race_works()
 
-    print("All tests passed")
+    #try:
+    #    for r in fn:
+    #        runner.register(r)
 
+    #    runner.wait()
+    #    print("All tests passed")
+    #except Exception as e:
+    #    raise e
 
 if __name__ == "__main__":
     main()
