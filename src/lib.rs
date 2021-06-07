@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use lazy_static::lazy_static;
-use redis_module::{redis_command, redis_event_handler, redis_module, RedisValue};
+use redis_module::{redis_command, redis_event_handler, redis_module};
 use redis_module::{NextArg, RedisResult, REDIS_OK};
 
 mod bucket;

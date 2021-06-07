@@ -30,6 +30,10 @@ stop-redis-server:
 dev-env:
 	./scripts/setup.sh
 
+docker:
+	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
+	ducker push mcaptcha/cache:0.1.0-beta 
+	ducker push mcaptcha/cache:latest
 
 xml-test-coverage:
 	cargo tarpaulin -t 1200 --out Xml --all --all-features --no-fail-fast
