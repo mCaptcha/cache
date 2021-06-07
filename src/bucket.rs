@@ -66,13 +66,7 @@ pub struct Bucket {
 }
 
 impl Bucket {
-    pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &str) {
-        let msg = format!(
-            "Received event: {:?} on key: {} via event: {}",
-            event_type, key_name, event
-        );
-        ctx.log_debug(msg.as_str());
-
+    pub fn on_delete(ctx: &Context, _event_type: NotifyEvent, _event: &str, key_name: &str) {
         if !is_bucket_timer(key_name) {
             return;
         }
@@ -182,6 +176,18 @@ impl Bucket {
 
         ctx.log_debug("visitor added");
         let duration = captcha.get_duration();
+
+        Self::increment_by(ctx, (captcha_name, duration), 1)?;
+
+        Ok(())
+    }
+
+    /// open bucket, set decrement by specified number
+    pub fn increment_by(
+        ctx: &Context,
+        (captcha_name, duration): (String, u64),
+        increment_by: u32,
+    ) -> CacheResult<()> {
         let bucket_instant = get_bucket_instant(duration)?;
         let bucket_name = get_bucket_name(bucket_instant);
 
@@ -192,7 +198,7 @@ impl Bucket {
 
         match bucket.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE)? {
             Some(bucket) => match bucket.decrement.get_mut(&captcha_name) {
-                Some(count) => *count += 1,
+                Some(count) => *count += increment_by,
                 None => {
                     bucket.decrement.insert(captcha_name, 1);
                 }

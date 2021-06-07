@@ -19,10 +19,11 @@ use std::time::Duration;
 use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
-//use redis_module::RedisError;
+use redis_module::NotifyEvent;
 use redis_module::{raw, Context};
 use serde::{Deserialize, Serialize};
 
+use crate::bucket::Bucket;
 use crate::errors::*;
 use crate::mcaptcha::MCaptcha;
 use crate::utils::*;
@@ -33,6 +34,66 @@ const MCAPTCHA_SAFETY_VERSION: i32 = 0;
 pub struct MCaptchaSafety;
 
 impl MCaptchaSafety {
+    pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &str) {
+        if !is_mcaptcha_safety(key_name) {
+            return;
+        }
+
+        let mcaptcha_name = get_mcaptcha_from_safety(key_name);
+        if mcaptcha_name.is_none() {
+            return;
+        }
+        let mcaptcha_name = mcaptcha_name.unwrap();
+        let mcaptcha = ctx.open_key(mcaptcha_name);
+        if mcaptcha.key_type() == KeyType::Empty {
+            ctx.log_warning(&format!("mcaptcha {} is empty", mcaptcha_name));
+            return;
+        }
+
+        let mcaptcha_val = MCaptcha::get_mcaptcha(&mcaptcha);
+        if mcaptcha_val.is_err() {
+            ctx.log_warning(&format!(
+                "error occured while trying to access mcaptcha {}. error {} is empty",
+                mcaptcha_name,
+                mcaptcha_val.err().unwrap()
+            ));
+            return;
+        }
+        let mcaptcha_val = mcaptcha_val.unwrap();
+        if mcaptcha_val.is_none() {
+            ctx.log_warning(&format!(
+                "error occured while trying to access mcaptcha {}. is none",
+                mcaptcha_name,
+            ));
+            return;
+        }
+        let mcaptcha_val = mcaptcha_val.unwrap();
+        let duration = mcaptcha_val.get_duration();
+        let visitors = mcaptcha_val.get_visitors();
+
+        if Self::new(ctx, duration, mcaptcha_name).is_err() {
+            ctx.log_warning(&format!(
+                "error occured while creating safety for mcaptcha {}.",
+                mcaptcha_name,
+            ));
+        };
+        if visitors == 0 {
+            ctx.log_warning(&format!(
+                "visitors 0 for mcaptcha mcaptcha {}.",
+                mcaptcha_name,
+            ));
+            return;
+        }
+
+        match Bucket::increment_by(ctx, (mcaptcha_name.to_owned(), duration), visitors) {
+            Err(e) => ctx.log_warning(&format!("{}", e)),
+            Ok(()) => ctx.log_debug(&format!(
+                "Created new bucket making captcha {} eventually consistent",
+                &mcaptcha_name
+            )),
+        }
+    }
+
     pub fn new(ctx: &Context, duration: u64, mcaptcha_name: &str) -> CacheResult<()> {
         let safety_name = get_safety_name(mcaptcha_name);
         let safety = ctx.open_key_writable(&safety_name);

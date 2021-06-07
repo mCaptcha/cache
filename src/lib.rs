@@ -15,8 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use lazy_static::lazy_static;
+use redis_module::NotifyEvent;
 use redis_module::{redis_command, redis_event_handler, redis_module};
 use redis_module::{NextArg, RedisResult, REDIS_OK};
+//use redis_module::RedisError;
+use redis_module::Context;
 
 mod bucket;
 mod errors;
@@ -63,6 +66,21 @@ lazy_static! {
     pub static ref PREFIX_BUCKET: String = format!("{}:bucket:{{{}}}:", PKG_NAME, *ID);
 }
 
+pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &str) {
+    let msg = format!(
+        "Received event: {:?} on key: {} via event: {}",
+        event_type, key_name, event
+    );
+    ctx.log_debug(msg.as_str());
+
+    if utils::is_bucket_timer(key_name) {
+        bucket::Bucket::on_delete(ctx, event_type, event, key_name);
+        return;
+    } else if utils::is_mcaptcha_safety(key_name) {
+        crate::safety::MCaptchaSafety::on_delete(ctx, event_type, event, key_name);
+    }
+}
+
 redis_module! {
     name: "mcaptcha_cahce",
     version: PKG_VERSION,
@@ -75,7 +93,7 @@ redis_module! {
         ["mcaptcha_cache.captcha_exists", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
     ],
    event_handlers: [
-        [@EXPIRED @EVICTED: bucket::Bucket::on_delete],
+        [@EXPIRED @EVICTED: on_delete],
         //TODO add expire/evicted event for safety
     ]
 }

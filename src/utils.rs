@@ -68,6 +68,11 @@ pub fn is_bucket_timer(name: &str) -> bool {
     name.contains(&*PREFIX_BUCKET_TIMER)
 }
 
+#[inline]
+pub fn is_mcaptcha_safety(name: &str) -> bool {
+    name.contains(&PREFIX_SAFETY)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
