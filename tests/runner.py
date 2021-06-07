@@ -14,35 +14,25 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from threading import Thread
+import asyncio
 
 class Runner(object):
     _functions = []
-    _threads = []
+    _tasks = []
 
-    """ Register functions to be run"""
-    def register(self, fn):
+    async def register(self, fn):
+        """ Register functions to be run"""
         self._functions.append(fn)
-        t = Thread(target=fn)
-        self._threads.append(t)
+        task = asyncio.create_task(fn())
+        self._tasks.append(task)
 
-    """Wait for registered functions to finish executing"""
 
-    def __run__(self):
-        for thread in self._threads:
-            try:
-                thread.start()
-            except:
-                print("yo")
+    async def wait(self):
+        """Wait for registered functions to finish executing"""
 
-    def wait(self):
-        self.__run__()
-        for thread in self._threads:
-            try:
-                thread.join()
-            except:
-                print("yo")
+        for task in self._tasks:
+            await task
 
     """Runs in seperate threads"""
     def __init__(self):
         super(Runner, self).__init__()
-#        self.arg = arg

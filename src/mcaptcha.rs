@@ -1,4 +1,5 @@
 use redis_module::key::RedisKey;
+use redis_module::RedisError;
 use redis_module::RedisValue;
 /*
  * Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
@@ -16,6 +17,7 @@ use redis_module::RedisValue;
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use libmcaptcha::{defense::Level, DefenseBuilder, MCaptchaBuilder};
 use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
@@ -28,6 +30,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::bucket::Format;
 use crate::errors::*;
+use crate::safety::MCaptchaSafety;
 use crate::utils::*;
 
 const REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION: i32 = 0;
@@ -37,11 +40,30 @@ pub struct MCaptcha {
     m: libmcaptcha::MCaptcha,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct CreateMCaptcha {
+    levels: Vec<Level>,
+    duration: u64,
+}
+
 impl MCaptcha {
     #[inline]
-    fn new(m: libmcaptcha::MCaptcha) -> Self {
-        MCaptcha { m }
+    fn new(mut m: CreateMCaptcha) -> CacheResult<Self> {
+        let mut defense_builder = DefenseBuilder::default();
+        let mut defense_builder = &mut defense_builder;
+        for l in m.levels.drain(0..) {
+            defense_builder = defense_builder.add_level(l)?;
+        }
+        let defense = defense_builder.build()?;
+
+        let m = MCaptchaBuilder::default()
+            .defense(defense)
+            .duration(m.duration)
+            .build()?;
+
+        Ok(MCaptcha { m })
     }
+
     /// increments the visitor count by one
     #[inline]
     pub fn add_visitor(&mut self) {
@@ -50,24 +72,28 @@ impl MCaptcha {
 
     /// decrements the visitor count by one
     #[inline]
+    #[allow(dead_code)]
     pub fn decrement_visitor(&mut self) {
         self.m.decrement_visitor()
     }
 
     /// get current difficulty factor
     #[inline]
+    #[allow(dead_code)]
     pub fn get_difficulty(&self) -> u32 {
         self.m.get_difficulty()
     }
 
     /// get [MCaptcha]'s lifetime
     #[inline]
+    #[allow(dead_code)]
     pub fn get_duration(&self) -> u64 {
         self.m.get_duration()
     }
 
     /// get [MCaptcha]'s current visitor_threshold
     #[inline]
+    #[allow(dead_code)]
     pub fn get_visitors(&self) -> u32 {
         self.m.get_visitors()
     }
@@ -112,13 +138,50 @@ impl MCaptcha {
         let mut args = args.into_iter().skip(1);
         let key_name = get_captcha_key(&args.next_string()?);
         let json = args.next_string()?;
-        let mcaptcha: libmcaptcha::MCaptcha = Format::JSON.from_str(&json)?;
-        let mcaptcha = Self::new(mcaptcha);
+        let mcaptcha: CreateMCaptcha = Format::JSON.from_str(&json)?;
+        let duration = mcaptcha.duration;
+        let mcaptcha = Self::new(mcaptcha)?;
 
-        let key = ctx.open_key_writable(&&key_name);
-        key.set_value(&MCAPTCHA_MCAPTCHA_TYPE, mcaptcha)?;
+        let key = ctx.open_key_writable(&key_name);
+        if key.key_type() == KeyType::Empty {
+            key.set_value(&MCAPTCHA_MCAPTCHA_TYPE, mcaptcha)?;
+            ctx.log_debug(&format!("mcaptcha {} created", key_name));
+            MCaptchaSafety::new(ctx, duration, &key_name)?;
+            REDIS_OK
+        } else {
+            let msg = format!("mcaptcha {} exists", key_name);
+            ctx.log_debug(&msg);
+            Err(CacheError::new(msg).into())
+        }
+    }
 
-        REDIS_OK
+    /// check if captcha exists
+    pub fn captcha_exists(ctx: &Context, args: Vec<String>) -> RedisResult {
+        let mut args = args.into_iter().skip(1);
+        let key_name = get_captcha_key(&args.next_string()?);
+
+        let key = ctx.open_key(&key_name);
+        if key.key_type() == KeyType::Empty {
+            // 1 is false
+            Ok(RedisValue::Integer(1))
+        } else {
+            // 0 is true
+            Ok(RedisValue::Integer(0))
+        }
+    }
+
+    /// Add captcha to redis
+    pub fn delete_captcha(ctx: &Context, args: Vec<String>) -> RedisResult {
+        let mut args = args.into_iter().skip(1);
+        let key_name = get_captcha_key(&args.next_string()?);
+
+        let key = ctx.open_key_writable(&key_name);
+        if key.key_type() == KeyType::Empty {
+            Err(RedisError::nonexistent_key())
+        } else {
+            key.delete()?;
+            REDIS_OK
+        }
     }
 }
 
@@ -160,10 +223,17 @@ pub mod type_methods {
         let mcaptcha = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-                let mcaptcha: MCaptcha = Format::JSON.from_str(&data).unwrap();
-                mcaptcha
+                let mcaptcha: Result<MCaptcha, CacheError> = Format::JSON.from_str(&data);
+                if mcaptcha.is_err() {
+                    panic!(
+                        "Can't load mCaptcha from old redis RDB, error while serde {}, data received: {}",
+                        mcaptcha.err().unwrap(),
+                        data
+                    );
+                }
+                mcaptcha.unwrap()
             }
-            _ => panic!("Can't load mCaptcha from old redis RDB"),
+            _ => panic!("Can't load mCaptcha from old redis RDB, encver {}", encver),
         };
 
         Box::into_raw(Box::new(mcaptcha)) as *mut c_void
@@ -181,5 +251,89 @@ pub mod type_methods {
             Ok(string) => raw::save_string(rdb, &string),
             Err(e) => panic!("error while rdb_save: {}", e),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use libmcaptcha::defense::LevelBuilder;
+
+    fn get_levels() -> Vec<Level> {
+        let mut levels = Vec::default();
+        levels.push(
+            LevelBuilder::default()
+                .visitor_threshold(50)
+                .difficulty_factor(50)
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+        levels.push(
+            LevelBuilder::default()
+                .visitor_threshold(500)
+                .difficulty_factor(5000)
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+        levels.push(
+            LevelBuilder::default()
+                .visitor_threshold(5000)
+                .difficulty_factor(50000)
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+        levels.push(
+            LevelBuilder::default()
+                .visitor_threshold(50000)
+                .difficulty_factor(500000)
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+        levels.push(
+            LevelBuilder::default()
+                .visitor_threshold(500000)
+                .difficulty_factor(5000000)
+                .unwrap()
+                .build()
+                .unwrap(),
+        );
+        levels
+    }
+
+    #[test]
+    fn create_mcaptcha_works() {
+        let levels = get_levels();
+        let payload = CreateMCaptcha {
+            levels,
+            duration: 30,
+        };
+
+        let mcaptcha = MCaptcha::new(payload);
+        assert!(mcaptcha.is_ok());
+        let mut mcaptcha = mcaptcha.unwrap();
+
+        for _ in 0..50 {
+            mcaptcha.add_visitor();
+        }
+        assert_eq!(mcaptcha.get_visitors(), 50);
+        assert_eq!(mcaptcha.get_difficulty(), 50);
+
+        for _ in 0..451 {
+            mcaptcha.add_visitor();
+        }
+        assert_eq!(mcaptcha.get_visitors(), 501);
+        assert_eq!(mcaptcha.get_difficulty(), 5000);
+
+        mcaptcha.decrement_visitor_by(501);
+        for _ in 0..5002 {
+            mcaptcha.add_visitor();
+        }
+        assert_eq!(mcaptcha.get_visitors(), 5002);
+        assert_eq!(mcaptcha.get_difficulty(), 50000);
     }
 }

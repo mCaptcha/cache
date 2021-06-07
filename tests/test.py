@@ -23,31 +23,33 @@ from redis import BlockingConnectionPool
 import utils
 from runner import Runner
 import bucket
+import mcaptcha
 
 REDIS_URL = "redis://localhost:6350"
 
-
-r = utils.connect(REDIS_URL)
-utils.ping(r)
-
-
 async def main():
-    #runner = Runner()
-    #fn = [bucket.incr_one_works]#, bucket.race_works]
+    runner = Runner()
 
-    task1 = asyncio.create_task(bucket.incr_one_works())
-    task2 = asyncio.create_task(bucket.race_works())
-    await task1
-    await task2
+    fn = [
+            bucket.incr_one_works,
+            bucket.race_works,
+            #mcaptcha.delete_captcha_works,
+            mcaptcha.captcha_exists_works,
+            mcaptcha.register_captcha_works
+        ]
 
-    #try:
-    #    for r in fn:
-    #        runner.register(r)
+    #tasts = []
+    #task1 = asyncio.create_task(bucket.incr_one_works())
+    #task2 = asyncio.create_task(bucket.race_works())
+    #await task1
+    #await task2
+    
 
-    #    runner.wait()
-    #    print("All tests passed")
-    #except Exception as e:
-    #    raise e
+    for r in fn:
+        await runner.register(r)
+
+    await runner.wait()
+    print("All tests passed")
 
 if __name__ == "__main__":
     asyncio.run(main())

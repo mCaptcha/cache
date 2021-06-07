@@ -36,42 +36,43 @@ impl MCaptchaSafety {
     pub fn new(ctx: &Context, duration: u64, mcaptcha_name: &str) -> CacheResult<()> {
         let safety_name = get_safety_name(mcaptcha_name);
         let safety = ctx.open_key_writable(&safety_name);
-        Self::set_timer(ctx, &safety, (&safety_name, duration))?;
+
+        if safety.key_type() == KeyType::Empty {
+            let safety_val = MCaptchaSafety {};
+            safety.set_value(&MCAPTCHA_SAFETY_TYPE, safety_val)?;
+            ctx.log_debug(&format!("mcaptcha safety created: {}", safety_name));
+            Self::set_timer(ctx, &safety, (safety_name, duration))?;
+        } else {
+            ctx.log_debug(&format!("mcaptcha safety exists: {}", safety_name));
+        }
         Ok(())
     }
 
     fn set_timer(
         ctx: &Context,
         safety: &RedisKeyWritable,
-        (safety_name, duration): (&str, u64),
+        (safety_name, duration): (String, u64),
     ) -> CacheResult<()> {
         let _ = ctx.create_timer(
             Duration::from_secs(duration),
             Self::boost,
-            (&safety_name, duration),
+            (safety_name, duration),
         );
-
         safety.set_expire(Duration::from_secs(duration * 2))?;
         Ok(())
     }
 
     /// executes when timer goes off. Refreshes expiry timer and resets timer
-    fn boost(ctx: &Context, (safety_name, duration): (&str, u64)) {
-        let safety = ctx.open_key_writable(safety_name);
-
-        let x = safety.get_value::<Self>(&MCAPTCHA_SAFETY_TYPE);
-        // Result<Option<&mut Safety>, RedisError>
-        // Ok(Some(val)) => refresh
-        // _ => check if corresponding captcha is available => Yes -> create timer
-        //                                                     NO -> Ignore
-        //
+    fn boost(ctx: &Context, (safety_name, duration): (String, u64)) {
+        let safety = ctx.open_key_writable(&safety_name);
 
         match safety.get_value::<Self>(&MCAPTCHA_SAFETY_TYPE) {
-            Ok(Some(_safety_val)) => {
-                Self::set_timer(ctx, &safety, (&safety_name, duration)).unwrap()
-            }
+            Ok(Some(_safety_val)) => match Self::set_timer(ctx, &safety, (safety_name, duration)) {
+                Ok(_) => (),
+                Err(e) => ctx.log_warning(&format!("{}", e)),
+            },
             _ => {
-                let mcaptcha_name = get_mcaptcha_from_safety(safety_name);
+                let mcaptcha_name = get_mcaptcha_from_safety(&safety_name);
                 if mcaptcha_name.is_none() {
                     return;
                 }
@@ -127,19 +128,24 @@ pub mod type_methods {
 
     use libc::c_int;
 
-    use crate::bucket::Format;
+    const SAFETY_RDB_VAL: &str = "SAFETY";
 
     use super::*;
-
     #[allow(non_snake_case, unused)]
     pub extern "C" fn rdb_load(rdb: *mut raw::RedisModuleIO, encver: c_int) -> *mut c_void {
         let bucket = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-                let bucket: MCaptchaSafety = Format::JSON.from_str(&data).unwrap();
-                bucket
+                if data == SAFETY_RDB_VAL {
+                    MCaptchaSafety {}
+                } else {
+                    panic!("Can't safety from old redis RDB, data received : {}", data);
+                }
             }
-            _ => panic!("Can't load bucket from old redis RDB"),
+            _ => panic!(
+                "Can't safety from old redis RDB, encoding version: {}",
+                encver
+            ),
         };
 
         //        if bucket.
@@ -153,10 +159,6 @@ pub mod type_methods {
 
     #[allow(non_snake_case, unused)]
     pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
-        let bucket = &*(value as *mut MCaptchaSafety);
-        match &serde_json::to_string(bucket) {
-            Ok(string) => raw::save_string(rdb, &string),
-            Err(e) => eprintln!("error while rdb_save: {}", e),
-        }
+        raw::save_string(rdb, &SAFETY_RDB_VAL)
     }
 }

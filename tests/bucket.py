@@ -16,18 +16,20 @@
 from asyncio import sleep
 import sys
 
-import test
 from mcaptcha import register
+from test import REDIS_URL
+import utils
 
-r = test.r
+r = utils.connect(REDIS_URL)
+utils.ping(r)
 
 COMMANDS = {
 "COUNT" : "mcaptcha_cache.add_visitor",
 "GET" : "mcaptcha_cache.get",
 }
 
-def incr(key, time):
-    r.execute_command(COMMANDS["COUNT"], key, time)
+def incr(key):
+    r.execute_command(COMMANDS["COUNT"], key)
 
 def get_count(key):
     try:
@@ -43,14 +45,13 @@ def assert_count(expect, key):
 async def incr_one_works():
     try:
         key = "incr_one"
-        register(r, key)
-        time = 2
+        register(key)
         initial_count = get_count(key)
         # incriment
-        incr(key, time)
+        incr(key)
         assert_count(initial_count + 1, key)
         # wait till expiry
-        await sleep(time + 2)
+        await sleep(5 + 2)
         assert_count(initial_count, key)
         print("Incr one works")
     except Exception as e:
@@ -60,16 +61,14 @@ async def incr_one_works():
 async def race_works():
     key = "race_works"
     try:
-        register(r, key)
+        register(key)
         initial_count = get_count(key)
         race_num = 200
-        time = 3
-
         for _ in range(race_num):
-            incr(key, time)
+            incr(key)
         assert_count(initial_count + race_num, key)
         # wait till expiry
-        await sleep(time + 2)
+        await sleep(5 + 2)
         assert_count(initial_count, key)
         print("Race works")
     except Exception as e:

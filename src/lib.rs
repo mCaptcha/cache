@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use lazy_static::lazy_static;
-use redis_module::{redis_command, redis_event_handler, redis_module};
+use redis_module::{redis_command, redis_event_handler, redis_module, RedisValue};
 use redis_module::{NextArg, RedisResult, REDIS_OK};
 
 mod bucket;
@@ -32,11 +32,8 @@ use safety::MCAPTCHA_SAFETY_TYPE;
 /// Initial allocation ammount of bucket[bucket::Bucket]
 pub const HIT_PER_SECOND: usize = 100;
 
-/// Bucket[bucket::Bucket] type version
-pub const REDIS_MCAPTCHA_BUCKET_TYPE_VERSION: i32 = 1;
-
 pub const PKG_NAME: &str = "mcap";
-pub const PKG_VERSION: usize = 1;
+pub const PKG_VERSION: usize = 0;
 
 /// bucket timer key prefix
 // PREFIX_BUCKET_TIMER is used like this:
@@ -52,6 +49,8 @@ pub const PREFIX_SAFETY: &str = "safety:";
 pub const BUCKET_EXPIRY_OFFSET: u64 = 30;
 
 lazy_static! {
+
+
     /// node unique identifier, useful when running in cluster mode
     pub static ref ID: usize = {
         use rand::prelude::*;
@@ -72,6 +71,8 @@ redis_module! {
         ["mcaptcha_cache.add_visitor", bucket::Bucket::counter_create, "write", 1, 1, 1],
         ["mcaptcha_cache.get", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
         ["mcaptcha_cache.add_captcha", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
+        ["mcaptcha_cache.delete_captcha", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
+        ["mcaptcha_cache.captcha_exists", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
     ],
    event_handlers: [
         [@EXPIRED @EVICTED: bucket::Bucket::on_delete],

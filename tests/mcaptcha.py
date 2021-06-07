@@ -17,26 +17,71 @@
 
 import json
 
+import utils
+from test import REDIS_URL
+
+r = utils.connect(REDIS_URL)
+utils.ping(r)
+
 MCAPTCHA = {
-  "visitor_threshold": 0,
-  "defense": {
-    "levels": [
+  "levels": [
       {"visitor_threshold": 50, "difficulty_factor": 50},
       {"visitor_threshold": 500, "difficulty_factor": 500}
     ],
-    "current_visitor_threshold": 0
-  },
   "duration": 5
 }
 
 COMMANDS = {
     "ADD_CAPTCHA": "MCAPTCHA_CACHE.ADD_CAPTCHA",
+    "DELETE_CAPTCHA": "MCAPTCHA_CACHE.DELETE_CAPTCHA",
+    "CAPTCHA_EXISTS": "MCAPTCHA_CACHE.CAPTCHA_EXISTS",
 }
 
 payload = json.dumps(MCAPTCHA)
 
-def register(r, key):
-    if r.exists(key):
-       r.delete(key)
+def delete_captcha(key):
+    r.execute_command(COMMANDS["DELETE_CAPTCHA"], key)
 
+
+def add_captcha(key):
     r.execute_command(COMMANDS["ADD_CAPTCHA"], key, payload)
+
+
+def captcha_exists(key):
+    exists = r.execute_command(COMMANDS["CAPTCHA_EXISTS"], key)
+    if exists == 0:
+        return True
+
+    if exists == 1:
+        return False
+
+def register(key):
+    if captcha_exists(key):
+        delete_captcha(key)
+
+    add_captcha(key)
+
+async def captcha_exists_works():
+    key = "captcha_delete_works"
+    if captcha_exists(key):
+        delete_captcha(key)
+    assert captcha_exists(key) is False
+    register(key)
+    assert captcha_exists(key) is True
+    print("Captcha delete works")
+
+async def register_captcha_works():
+    key = "register_captcha_works"
+    register(key)
+    assert captcha_exists(key) is True
+    print("Add captcha works")
+
+async def delete_captcha_works():
+    key = "delete_captcha_works"
+    register(key)
+    exists = captcha_exists(key)
+    print("captcha exists stauts", exists)
+    assert exists is True
+    delete_captcha(key)
+    assert captcha_exists(key) is False
+    print("Delete captcha works")

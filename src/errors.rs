@@ -18,6 +18,7 @@
 use std::num::ParseIntError;
 
 use derive_more::Display;
+use libmcaptcha::errors::CaptchaError;
 use redis_module::RedisError;
 use redis_module::RedisResult;
 
@@ -71,6 +72,12 @@ impl From<ParseIntError> for CacheError {
 impl From<CacheError> for RedisResult {
     fn from(e: CacheError) -> Self {
         Self::Err(e.into())
+    }
+}
+
+impl From<CaptchaError> for CacheError {
+    fn from(e: CaptchaError) -> Self {
+        CacheError::Msg(format!("{}", e))
     }
 }
 

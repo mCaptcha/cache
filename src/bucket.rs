@@ -32,6 +32,9 @@ use crate::mcaptcha::MCaptcha;
 use crate::utils::*;
 use crate::*;
 
+/// Bucket type version, aka encoding version
+const REDIS_MCAPTCHA_BUCKET_TYPE_VERSION: i32 = 0;
+
 #[derive(Debug, PartialEq)]
 /// encoding formats for persistence
 pub enum Format {
@@ -114,9 +117,8 @@ impl Bucket {
     /// use [decrement] when you require auto cleanup. Internally, it calls this method.
     #[inline]
     fn decrement_runner(ctx: &Context, key: &RedisKeyWritable) {
-        let val = key.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE).unwrap();
-        match val {
-            Some(bucket) => {
+        match key.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE) {
+            Ok(Some(bucket)) => {
                 ctx.log_debug(&format!("entering loop hashmap "));
                 for (captcha, count) in bucket.decrement.drain() {
                     ctx.log_debug(&format!(
@@ -127,13 +129,12 @@ impl Bucket {
                     if stored_captcha.key_type() == KeyType::Empty {
                         continue;
                     }
-                    let captcha = MCaptcha::get_mut_mcaptcha(&stored_captcha)
-                        .unwrap()
-                        .unwrap();
-                    captcha.decrement_visitor_by(count);
+                    if let Ok(Some(captcha)) = MCaptcha::get_mut_mcaptcha(&stored_captcha) {
+                        captcha.decrement_visitor_by(count);
+                    }
                 }
             }
-            None => {
+            _ => {
                 ctx.log_debug(&format!("bucket not found, can't decrement"));
             }
         }
@@ -160,18 +161,27 @@ impl Bucket {
 
     /// increments count of key = captcha and registers for auto decrement
     #[inline]
-    fn increment(ctx: &Context, duration: u64, captcha: &str) -> CacheResult<()> {
+    fn increment(ctx: &Context, captcha: &str) -> CacheResult<()> {
         let captcha_name = get_captcha_key(captcha);
         ctx.log_debug(&captcha_name);
         // increment
         let captcha = ctx.open_key_writable(&captcha_name);
+        ctx.log_debug("loading mcaptcha");
         let captcha = MCaptcha::get_mut_mcaptcha(&captcha)?;
 
-        match captcha {
-            Some(val) => val.add_visitor(),
-            None => return Err(CacheError::new("Captcha not found".into())),
+        ctx.log_debug("loaded mcaptcha");
+        if captcha.is_none() {
+            return Err(CacheError::new("Captcha not found".into()));
         }
+        let captcha = captcha.unwrap();
+        ctx.log_debug(&format!(
+            "current visitor count: {}",
+            captcha.get_visitors()
+        ));
+        captcha.add_visitor();
 
+        ctx.log_debug("visitor added");
+        let duration = captcha.get_duration();
         let bucket_instant = get_bucket_instant(duration)?;
         let bucket_name = get_bucket_name(bucket_instant);
 
@@ -207,8 +217,7 @@ impl Bucket {
         // mcaptcha captcha key name
         let key_name = args.next_string()?;
         // expiry
-        let duration = args.next_u64()?;
-        bucket::Bucket::increment(ctx, duration, &key_name)?;
+        bucket::Bucket::increment(ctx, &key_name)?;
         REDIS_OK
     }
 }
@@ -254,7 +263,7 @@ pub mod type_methods {
                 let bucket: Bucket = Format::JSON.from_str(&data).unwrap();
                 bucket
             }
-            _ => panic!("Can't load bucket from old redis RDB"),
+            _ => panic!("Can't load bucket from old redis RDB, encver: {}", encver,),
         };
 
         //        if bucket.
