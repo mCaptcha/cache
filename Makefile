@@ -44,7 +44,7 @@ dev:
 	cargo build
 
 doc:
-	cargo doc --no-deps --workspace --all-features
+	cargo doc --no-deps --workspace --all-features --document-private-items
 
 clean:
 	cargo clean
