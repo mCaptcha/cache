@@ -163,6 +163,8 @@
 <span id="160">160</span>
 <span id="161">161</span>
 <span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
@@ -202,42 +204,43 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">duration</span>: <span class="ident">u64</span>, <span class="ident">mcaptcha_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CacheResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">safety_name</span> <span class="op">=</span> <span class="ident">get_safety_name</span>(<span class="ident">mcaptcha_name</span>);
         <span class="kw">let</span> <span class="ident">safety</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">safety_name</span>);
-        <span class="self">Self</span>::<span class="ident">set_timer</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">safety</span>, (<span class="kw-2">&amp;</span><span class="ident">safety_name</span>, <span class="ident">duration</span>))<span class="question-mark">?</span>;
+
+        <span class="kw">if</span> <span class="ident">safety</span>.<span class="ident">key_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">KeyType</span>::<span class="ident">Empty</span> {
+            <span class="kw">let</span> <span class="ident">safety_val</span> <span class="op">=</span> <span class="ident">MCaptchaSafety</span> {};
+            <span class="ident">safety</span>.<span class="ident">set_value</span>(<span class="kw-2">&amp;</span><span class="ident">MCAPTCHA_SAFETY_TYPE</span>, <span class="ident">safety_val</span>)<span class="question-mark">?</span>;
+            <span class="ident">ctx</span>.<span class="ident">log_debug</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;mcaptcha safety created: {}&quot;</span>, <span class="ident">safety_name</span>));
+            <span class="self">Self</span>::<span class="ident">set_timer</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">safety</span>, (<span class="ident">safety_name</span>, <span class="ident">duration</span>))<span class="question-mark">?</span>;
+        } <span class="kw">else</span> {
+            <span class="ident">ctx</span>.<span class="ident">log_debug</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;mcaptcha safety exists: {}&quot;</span>, <span class="ident">safety_name</span>));
+        }
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn</span> <span class="ident">set_timer</span>(
         <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>,
         <span class="ident">safety</span>: <span class="kw-2">&amp;</span><span class="ident">RedisKeyWritable</span>,
-        (<span class="ident">safety_name</span>, <span class="ident">duration</span>): (<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">u64</span>),
+        (<span class="ident">safety_name</span>, <span class="ident">duration</span>): (<span class="ident">String</span>, <span class="ident">u64</span>),
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CacheResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">create_timer</span>(
             <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="ident">duration</span>),
             <span class="self">Self</span>::<span class="ident">boost</span>,
-            (<span class="kw-2">&amp;</span><span class="ident">safety_name</span>, <span class="ident">duration</span>),
+            (<span class="ident">safety_name</span>, <span class="ident">duration</span>),
         );
-
         <span class="ident">safety</span>.<span class="ident">set_expire</span>(<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="ident">duration</span> <span class="op">*</span> <span class="number">2</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// executes when timer goes off. Refreshes expiry timer and resets timer</span>
-    <span class="kw">fn</span> <span class="ident">boost</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, (<span class="ident">safety_name</span>, <span class="ident">duration</span>): (<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">u64</span>)) {
-        <span class="kw">let</span> <span class="ident">safety</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="ident">safety_name</span>);
-
-        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">safety</span>.<span class="ident">get_value</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">MCAPTCHA_SAFETY_TYPE</span>);
-        <span class="comment">// Result&lt;Option&lt;&amp;mut Safety&gt;, RedisError&gt;</span>
-        <span class="comment">// Ok(Some(val)) =&gt; refresh</span>
-        <span class="comment">// _ =&gt; check if corresponding captcha is available =&gt; Yes -&gt; create timer</span>
-        <span class="comment">//                                                     NO -&gt; Ignore</span>
-        <span class="comment">//</span>
+    <span class="kw">fn</span> <span class="ident">boost</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, (<span class="ident">safety_name</span>, <span class="ident">duration</span>): (<span class="ident">String</span>, <span class="ident">u64</span>)) {
+        <span class="kw">let</span> <span class="ident">safety</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">safety_name</span>);
 
         <span class="kw">match</span> <span class="ident">safety</span>.<span class="ident">get_value</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">MCAPTCHA_SAFETY_TYPE</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">_safety_val</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">Self</span>::<span class="ident">set_timer</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">safety</span>, (<span class="kw-2">&amp;</span><span class="ident">safety_name</span>, <span class="ident">duration</span>)).<span class="ident">unwrap</span>()
-            }
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">_safety_val</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">Self</span>::<span class="ident">set_timer</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">safety</span>, (<span class="ident">safety_name</span>, <span class="ident">duration</span>)) {
+                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ctx</span>.<span class="ident">log_warning</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)),
+            },
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">mcaptcha_name</span> <span class="op">=</span> <span class="ident">get_mcaptcha_from_safety</span>(<span class="ident">safety_name</span>);
+                <span class="kw">let</span> <span class="ident">mcaptcha_name</span> <span class="op">=</span> <span class="ident">get_mcaptcha_from_safety</span>(<span class="kw-2">&amp;</span><span class="ident">safety_name</span>);
                 <span class="kw">if</span> <span class="ident">mcaptcha_name</span>.<span class="ident">is_none</span>() {
                     <span class="kw">return</span>;
                 }
@@ -293,19 +296,24 @@
 
     <span class="kw">use</span> <span class="ident">libc</span>::<span class="ident">c_int</span>;
 
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bucket</span>::<span class="ident">Format</span>;
+    <span class="kw">const</span> <span class="ident">SAFETY_RDB_VAL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;SAFETY&quot;</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">rdb_load</span>(<span class="ident">rdb</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">RedisModuleIO</span>, <span class="ident">encver</span>: <span class="ident">c_int</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span> {
         <span class="kw">let</span> <span class="ident">bucket</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">encver</span> {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">raw</span>::<span class="ident">load_string</span>(<span class="ident">rdb</span>);
-                <span class="kw">let</span> <span class="ident">bucket</span>: <span class="ident">MCaptchaSafety</span> <span class="op">=</span> <span class="ident">Format</span>::<span class="ident">JSON</span>.<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">unwrap</span>();
-                <span class="ident">bucket</span>
+                <span class="kw">if</span> <span class="ident">data</span> <span class="op">=</span><span class="op">=</span> <span class="ident">SAFETY_RDB_VAL</span> {
+                    <span class="ident">MCaptchaSafety</span> {}
+                } <span class="kw">else</span> {
+                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can&#39;t safety from old redis RDB, data received : {}&quot;</span>, <span class="ident">data</span>);
+                }
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can&#39;t load bucket from old redis RDB&quot;</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(
+                <span class="string">&quot;Can&#39;t safety from old redis RDB, encoding version: {}&quot;</span>,
+                <span class="ident">encver</span>
+            ),
         };
 
         <span class="comment">//        if bucket.</span>
@@ -319,11 +327,7 @@
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>, <span class="ident">unused</span>)]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">rdb_save</span>(<span class="ident">rdb</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">RedisModuleIO</span>, <span class="ident">value</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) {
-        <span class="kw">let</span> <span class="ident">bucket</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">MCaptchaSafety</span>);
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="ident">bucket</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">string</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">raw</span>::<span class="ident">save_string</span>(<span class="ident">rdb</span>, <span class="kw-2">&amp;</span><span class="ident">string</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;error while rdb_save: {}&quot;</span>, <span class="ident">e</span>),
-        }
+        <span class="ident">raw</span>::<span class="ident">save_string</span>(<span class="ident">rdb</span>, <span class="kw-2">&amp;</span><span class="ident">SAFETY_RDB_VAL</span>)
     }
 }
 </pre></div>
