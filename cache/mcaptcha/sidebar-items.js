@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION",""]],"mod":[["type_methods",""]],"static":[["MCAPTCHA_MCAPTCHA_TYPE",""]],"struct":[["CreateMCaptcha",""],["MCaptcha",""]]});
+initSidebarItems({"constant":[["REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION",""]],"mod":[["type_methods",""]],"static":[["MCAPTCHA_MCAPTCHA_TYPE",""]],"struct":[["MCaptcha",""]]});

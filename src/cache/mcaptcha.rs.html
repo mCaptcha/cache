@@ -360,7 +360,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */</span>
-<span class="kw">use</span> <span class="ident">libmcaptcha</span>::{<span class="ident">defense</span>::<span class="ident">Level</span>, <span class="ident">DefenseBuilder</span>, <span class="ident">MCaptchaBuilder</span>};
+<span class="kw">use</span> <span class="ident">libmcaptcha</span>::<span class="ident">dev</span>::{<span class="ident">AddVisitorResult</span>, <span class="ident">CreateMCaptcha</span>, <span class="ident">DefenseBuilder</span>, <span class="ident">MCaptchaBuilder</span>};
 <span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">key</span>::<span class="ident">RedisKeyWritable</span>;
 <span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">native_types</span>::<span class="ident">RedisType</span>;
 <span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">raw</span>::<span class="ident">KeyType</span>;
@@ -380,16 +380,15 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MCaptcha</span> {
-    <span class="ident">m</span>: <span class="ident">libmcaptcha</span>::<span class="ident">MCaptcha</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CreateMCaptcha</span> {
-    <span class="ident">levels</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Level</span><span class="op">&gt;</span>,
-    <span class="ident">duration</span>: <span class="ident">u64</span>,
+    <span class="ident">m</span>: <span class="ident">libmcaptcha</span>::<span class="ident">dev</span>::<span class="ident">MCaptcha</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">MCaptcha</span> {
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_add_visitor_result</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddVisitorResult</span> {
+        <span class="ident">AddVisitorResult</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">m</span>)
+    }
+
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">new</span>(<span class="kw-2">mut</span> <span class="ident">m</span>: <span class="ident">CreateMCaptcha</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CacheResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">defense_builder</span> <span class="op">=</span> <span class="ident">DefenseBuilder</span>::<span class="ident">default</span>();
@@ -601,6 +600,7 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
+    <span class="kw">use</span> <span class="ident">libmcaptcha</span>::<span class="ident">defense</span>::<span class="ident">Level</span>;
     <span class="kw">use</span> <span class="ident">libmcaptcha</span>::<span class="ident">defense</span>::<span class="ident">LevelBuilder</span>;
 
     <span class="kw">fn</span> <span class="ident">get_levels</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Level</span><span class="op">&gt;</span> {
