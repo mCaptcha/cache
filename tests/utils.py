@@ -18,10 +18,13 @@
 from redis.client import Redis
 from redis import BlockingConnectionPool
 
+
+REDIS_URL = "redis://localhost:6350"
+
 """Connect to redis instance"""
-def connect(url):
+def connect():
     r = Redis(connection_pool=BlockingConnectionPool(max_connections=4))
-    r.from_url(url)
+    r.from_url(REDIS_URL)
     return r
 
 """Ping Redis Instance"""

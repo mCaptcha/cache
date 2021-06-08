@@ -18,9 +18,8 @@
 import json
 
 import utils
-from test import REDIS_URL
 
-r = utils.connect(REDIS_URL)
+r = utils.connect()
 utils.ping(r)
 
 MCAPTCHA = {
@@ -68,20 +67,19 @@ async def captcha_exists_works():
     assert captcha_exists(key) is False
     register(key)
     assert captcha_exists(key) is True
-    print("Captcha delete works")
+    print("[*] Captcha delete works")
 
 async def register_captcha_works():
     key = "register_captcha_works"
     register(key)
     assert captcha_exists(key) is True
-    print("Add captcha works")
+    print("[*] Add captcha works")
 
 async def delete_captcha_works():
     key = "delete_captcha_works"
     register(key)
     exists = captcha_exists(key)
-    print("captcha exists stauts", exists)
     assert exists is True
     delete_captcha(key)
     assert captcha_exists(key) is False
-    print("Delete captcha works")
+    print("[*] Delete captcha works")

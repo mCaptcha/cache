@@ -155,7 +155,7 @@ impl Bucket {
 
     /// increments count of key = captcha and registers for auto decrement
     #[inline]
-    fn increment(ctx: &Context, captcha: &str) -> CacheResult<()> {
+    fn increment(ctx: &Context, captcha: &str) -> CacheResult<String> {
         let captcha_name = get_captcha_key(captcha);
         ctx.log_debug(&captcha_name);
         // increment
@@ -173,13 +173,15 @@ impl Bucket {
             captcha.get_visitors()
         ));
         captcha.add_visitor();
+        let res = captcha.get_add_visitor_result();
+        let res = serde_json::to_string(&res)?;
 
         ctx.log_debug("visitor added");
         let duration = captcha.get_duration();
 
         Self::increment_by(ctx, (captcha_name, duration), 1)?;
 
-        Ok(())
+        Ok(res)
     }
 
     /// open bucket, set decrement by specified number
@@ -223,8 +225,8 @@ impl Bucket {
         // mcaptcha captcha key name
         let key_name = args.next_string()?;
         // expiry
-        bucket::Bucket::increment(ctx, &key_name)?;
-        REDIS_OK
+        let res = bucket::Bucket::increment(ctx, &key_name)?;
+        Ok(res.into())
     }
 }
 

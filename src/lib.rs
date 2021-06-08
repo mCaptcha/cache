@@ -17,7 +17,7 @@
 use lazy_static::lazy_static;
 use redis_module::NotifyEvent;
 use redis_module::{redis_command, redis_event_handler, redis_module};
-use redis_module::{NextArg, RedisResult, REDIS_OK};
+use redis_module::{NextArg, RedisResult};
 //use redis_module::RedisError;
 use redis_module::Context;
 

@@ -15,12 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from asyncio import sleep
 import sys
+import json
 
 from mcaptcha import register
-from test import REDIS_URL
 import utils
 
-r = utils.connect(REDIS_URL)
+r = utils.connect()
 utils.ping(r)
 
 COMMANDS = {
@@ -29,7 +29,8 @@ COMMANDS = {
 }
 
 def incr(key):
-    r.execute_command(COMMANDS["COUNT"], key)
+    data = r.execute_command(COMMANDS["COUNT"], key)
+    return json.loads(data)
 
 def get_count(key):
     try:
@@ -53,7 +54,7 @@ async def incr_one_works():
         # wait till expiry
         await sleep(5 + 2)
         assert_count(initial_count, key)
-        print("Incr one works")
+        print("[*] Incr one works")
     except Exception as e:
         raise e
 
@@ -70,6 +71,30 @@ async def race_works():
         # wait till expiry
         await sleep(5 + 2)
         assert_count(initial_count, key)
-        print("Race works")
+        print("[*] Race works")
+    except Exception as e:
+        raise e
+
+
+async def difficulty_works():
+    key = "difficulty_works"
+    try:
+        register(key)
+        for _ in range(51):
+            incr(key)
+
+        data = incr(key)
+        assert data["difficulty_factor"] == 50
+        
+        for _ in range(501):
+            incr(key)
+        data = incr(key)
+        assert data["difficulty_factor"] == 500
+
+        await sleep(5 + 2)
+        data = incr(key)
+        assert data["difficulty_factor"] == 50
+
+        print("[*] Difficulty factor works")
     except Exception as e:
         raise e

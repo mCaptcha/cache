@@ -16,21 +16,32 @@
 from threading import Thread
 import asyncio
 
+import bucket
+import mcaptcha
+
+
 class Runner(object):
-    _functions = []
-    _tasks = []
+    __fn = [
+        bucket.incr_one_works,
+        bucket.race_works,
+        bucket.difficulty_works,
+        mcaptcha.delete_captcha_works,
+        mcaptcha.captcha_exists_works,
+        mcaptcha.register_captcha_works
+    ]
+    __tasks = []
 
-    async def register(self, fn):
+    async def __register(self):
         """ Register functions to be run"""
-        self._functions.append(fn)
-        task = asyncio.create_task(fn())
-        self._tasks.append(task)
+        for fn in self.__fn:
+            task = asyncio.create_task(fn())
+            self.__tasks.append(task)
 
 
-    async def wait(self):
+    async def run(self):
         """Wait for registered functions to finish executing"""
-
-        for task in self._tasks:
+        await self.__register()
+        for task in self.__tasks:
             await task
 
     """Runs in seperate threads"""

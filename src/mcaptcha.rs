@@ -17,7 +17,7 @@ use redis_module::RedisValue;
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use libmcaptcha::{defense::Level, DefenseBuilder, MCaptchaBuilder};
+use libmcaptcha::dev::{AddVisitorResult, CreateMCaptcha, DefenseBuilder, MCaptchaBuilder};
 use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
@@ -37,16 +37,15 @@ const REDIS_MCPATCHA_MCAPTCHA_TYPE_VERSION: i32 = 0;
 
 #[derive(Serialize, Deserialize)]
 pub struct MCaptcha {
-    m: libmcaptcha::MCaptcha,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateMCaptcha {
-    levels: Vec<Level>,
-    duration: u64,
+    m: libmcaptcha::dev::MCaptcha,
 }
 
 impl MCaptcha {
+    #[inline]
+    pub fn get_add_visitor_result(&self) -> AddVisitorResult {
+        AddVisitorResult::new(&self.m)
+    }
+
     #[inline]
     fn new(mut m: CreateMCaptcha) -> CacheResult<Self> {
         let mut defense_builder = DefenseBuilder::default();
@@ -258,6 +257,7 @@ pub mod type_methods {
 mod tests {
     use super::*;
 
+    use libmcaptcha::defense::Level;
     use libmcaptcha::defense::LevelBuilder;
 
     fn get_levels() -> Vec<Level> {
