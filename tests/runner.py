@@ -18,6 +18,7 @@ import asyncio
 
 import bucket
 import mcaptcha
+import challenge
 
 
 class Runner(object):
@@ -27,7 +28,11 @@ class Runner(object):
         bucket.difficulty_works,
         mcaptcha.delete_captcha_works,
         mcaptcha.captcha_exists_works,
-        mcaptcha.register_captcha_works
+        mcaptcha.register_captcha_works,
+        challenge.add_challenge_works,
+        challenge.challenge_doesnt_exist,
+        challenge.challenge_ttl_works,
+        challenge.duplicate_challenge_works,
     ]
     __tasks = []
 

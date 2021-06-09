@@ -30,6 +30,10 @@ pub enum CacheError {
     RedisError(redis_module::RedisError),
     #[display(fmt = "Captcha not found")]
     CaptchaNotFound,
+    #[display(fmt = "Challenge not found")]
+    ChallengeNotFound,
+    #[display(fmt = "Challenge already exists")]
+    DuplicateChallenge,
 }
 
 impl CacheError {
@@ -87,6 +91,8 @@ impl From<CacheError> for RedisError {
             CacheError::Msg(val) => RedisError::String(val),
             CacheError::RedisError(val) => val,
             CacheError::CaptchaNotFound => RedisError::String(format!("{}", e)),
+            CacheError::ChallengeNotFound => RedisError::String(format!("{}", e)),
+            CacheError::DuplicateChallenge => RedisError::String(format!("{}", e)),
         }
     }
 }

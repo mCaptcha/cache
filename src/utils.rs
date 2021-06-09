@@ -73,6 +73,11 @@ pub fn is_mcaptcha_safety(name: &str) -> bool {
     name.contains(&PREFIX_SAFETY)
 }
 
+#[inline]
+pub fn get_challenge_name(captcha: &str, challenge: &str) -> String {
+    format!("{}:{{{}}}:{}", &*PREFIX_CHALLENGE, captcha, challenge)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

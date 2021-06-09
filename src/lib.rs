@@ -22,13 +22,14 @@ use redis_module::{NextArg, RedisResult};
 use redis_module::Context;
 
 mod bucket;
+mod challenge;
 mod errors;
 mod mcaptcha;
-#[allow(dead_code, unused_features, unused_variables)]
 mod safety;
 mod utils;
 
 use bucket::MCAPTCHA_BUCKET_TYPE;
+use challenge::MCAPTCHA_CHALLENGE_TYPE;
 use mcaptcha::MCAPTCHA_MCAPTCHA_TYPE;
 use safety::MCAPTCHA_SAFETY_TYPE;
 
@@ -64,6 +65,8 @@ lazy_static! {
     pub static ref PREFIX_CAPTCHA: String = format!("{}:captcha::", PKG_NAME);
     /// bucket key prefix
     pub static ref PREFIX_BUCKET: String = format!("{}:bucket:{{{}}}:", PKG_NAME, *ID);
+
+    pub static ref PREFIX_CHALLENGE: String = format!("{}:CHALLENGE", PKG_NAME);
 }
 
 pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &str) {
@@ -84,13 +87,15 @@ pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: 
 redis_module! {
     name: "mcaptcha_cahce",
     version: PKG_VERSION,
-    data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE],
+    data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
     commands: [
         ["mcaptcha_cache.add_visitor", bucket::Bucket::counter_create, "write", 1, 1, 1],
         ["mcaptcha_cache.get", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
         ["mcaptcha_cache.add_captcha", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
         ["mcaptcha_cache.delete_captcha", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
         ["mcaptcha_cache.captcha_exists", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
+        ["mcaptcha_cache.add_challenge", challenge::Challenge::create_challenge, "write", 1, 1, 1],
+        ["mcaptcha_cache.get_challenge", challenge::Challenge::get_challenge, "write", 1, 1, 1],
     ],
    event_handlers: [
         [@EXPIRED @EVICTED: on_delete],

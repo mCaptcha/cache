@@ -1,6 +1,3 @@
-use redis_module::key::RedisKey;
-use redis_module::RedisError;
-use redis_module::RedisValue;
 /*
  * Copyright (C) 2021  Aravinth Manivannan <realaravinth@batsense.net>
  *
@@ -18,9 +15,12 @@ use redis_module::RedisValue;
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use libmcaptcha::dev::{AddVisitorResult, CreateMCaptcha, DefenseBuilder, MCaptchaBuilder};
+use redis_module::key::RedisKey;
 use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
+use redis_module::RedisError;
+use redis_module::RedisValue;
 use redis_module::{Context, RedisResult};
 use redis_module::{NextArg, REDIS_OK};
 //use redis_module::RedisError;

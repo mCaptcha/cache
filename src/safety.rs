@@ -34,7 +34,7 @@ const MCAPTCHA_SAFETY_VERSION: i32 = 0;
 pub struct MCaptchaSafety;
 
 impl MCaptchaSafety {
-    pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &str) {
+    pub fn on_delete(ctx: &Context, _event_type: NotifyEvent, _event: &str, key_name: &str) {
         if !is_mcaptcha_safety(key_name) {
             return;
         }
@@ -143,7 +143,7 @@ impl MCaptchaSafety {
                     return;
                 }
 
-                if let Ok(Some(val)) = MCaptcha::get_mcaptcha(&mcaptcha) {
+                if let Ok(Some(_)) = MCaptcha::get_mcaptcha(&mcaptcha) {
                     let res = Self::new(ctx, duration, mcaptcha_name);
                     if res.is_err() {
                         ctx.log_warning(&format!(
@@ -159,7 +159,7 @@ impl MCaptchaSafety {
 }
 
 pub static MCAPTCHA_SAFETY_TYPE: RedisType = RedisType::new(
-    "mcaptdafe",
+    "mcaptsafe",
     MCAPTCHA_SAFETY_VERSION,
     raw::RedisModuleTypeMethods {
         version: raw::REDISMODULE_TYPE_METHOD_VERSION as u64,
