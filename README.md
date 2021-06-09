@@ -166,25 +166,28 @@ better suited to your workload.
 To run benchmarks locally, launch Redis server with module loaded and:
 
 ```bash
-$ ./scripts/bench.sh
+$ make bench
 ```
 
 - platform: `Intel core i7-9750h`
 
 ```bash
+➜  cache git:(master) ✗ make bench
+./scripts/bench.sh
 running set and get without pipelining
-SET: 125046.89 requests per second, p50=0.199 msec
-GET: 124502.00 requests per second, p50=0.199 msec
+SET: 128600.82 requests per second, p50=0.191 msec
+GET: 128617.36 requests per second, p50=0.191 msec
 
 mCaptcha cache without piplining
-MCAPTCHA_CACHE.COUNT mycounter 45: 124828.37 requests per second, p50=0.215 msec
-
+MCAPTCHA_CACHE.ADD_VISITOR mycounter: 127811.86 requests per second, p50=0.207 msec
+MCAPTCHA_CACHE.GET mycounter: 123243.77 requests per second, p50=0.199 msec
 running set and get with pipelining
-SET: 1353179.88 requests per second, p50=0.487 msec
-GET: 1633987.00 requests per second, p50=0.383 msec
+SET: 1416430.62 requests per second, p50=0.479 msec
+GET: 1644736.88 requests per second, p50=0.391 msec
 
 mCaptcha cache with piplining
-MCAPTCHA_CACHE.COUNT mycounter 45: 385653.69 requests per second, p50=1.959 msec
+MCAPTCHA_CACHE.ADD_VISITOR mycounter: 396039.59 requests per second, p50=1.903 msec
+MCAPTCHA_CACHE.GET mycounter: 889679.75 requests per second, p50=0.791 msec
 ```
 
 ## Hacks

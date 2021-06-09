@@ -42,7 +42,7 @@ def delete_captcha(key):
     r.execute_command(COMMANDS["DELETE_CAPTCHA"], key)
 
 
-def add_captcha(key):
+def add_captcha(key, duration=5):
     r.execute_command(COMMANDS["ADD_CAPTCHA"], key, payload)
 
 
@@ -54,11 +54,11 @@ def captcha_exists(key):
     if exists == 1:
         return False
 
-def register(key):
+def register(key, duration=5):
     if captcha_exists(key):
         delete_captcha(key)
 
-    add_captcha(key)
+    add_captcha(key, duration=5)
 
 async def captcha_exists_works():
     key = "captcha_delete_works"

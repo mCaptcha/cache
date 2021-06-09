@@ -24,8 +24,8 @@ r = utils.connect()
 utils.ping(r)
 
 COMMANDS = {
-"COUNT" : "mcaptcha_cache.add_visitor",
-"GET" : "mcaptcha_cache.get",
+"COUNT" : "MCAPTCHA_CACHE.ADD_VISITOR",
+"GET" : "MCAPTCHA_CACHE.GET",
 }
 
 def incr(key):
