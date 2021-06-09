@@ -17,6 +17,7 @@
 use std::time::Duration;
 
 use libmcaptcha::cache::AddChallenge;
+use libmcaptcha::master::AddVisitorResult;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
 use redis_module::NextArg;
@@ -32,17 +33,14 @@ use crate::utils::*;
 const MCAPTCHA_CHALLENGE_VERSION: i32 = 0;
 
 #[derive(Serialize, Deserialize)]
-pub struct Challenge {
-    difficulty: usize,
-    duration: u64,
-}
+pub struct Challenge(AddVisitorResult);
 
 impl Challenge {
-    pub fn new(duration: u64, difficulty: usize) -> Self {
-        Self {
-            difficulty,
-            duration,
-        }
+    pub fn new(duration: u64, difficulty: u32) -> Self {
+        Self(AddVisitorResult {
+            difficulty_factor: difficulty,
+            duration: duration,
+        })
     }
 
     pub fn create_challenge(ctx: &Context, args: Vec<String>) -> RedisResult {
@@ -125,7 +123,7 @@ pub mod type_methods {
         let challenge = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-                let challenge: Result<Challenge, CacheError> = Format::Json.from_str(&data);
+                let challenge: Result<AddVisitorResult, CacheError> = Format::Json.from_str(&data);
                 if challenge.is_err() {
                     panic!(
                         "Can't load Challenge from old redis RDB, error while serde {}, data received: {}",
@@ -133,7 +131,7 @@ pub mod type_methods {
                         data
                     );
                 }
-                challenge.unwrap()
+                Challenge(challenge.unwrap())
             }
             _ => panic!("Can't load mCaptcha from old redis RDB, encver {}", encver),
         };
@@ -149,7 +147,7 @@ pub mod type_methods {
     #[allow(non_snake_case, unused)]
     pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
         let challenge = &*(value as *mut Challenge);
-        match &serde_json::to_string(challenge) {
+        match &serde_json::to_string(&challenge.0) {
             Ok(string) => raw::save_string(rdb, &string),
             Err(e) => panic!("error while rdb_save: {}", e),
         }

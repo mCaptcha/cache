@@ -74,7 +74,7 @@ async def add_challenge_works():
         add_challenge(key, challenge)
         stored_challenge = get_challenge_from_redis(key, challenge_name)
         challenge_dict = json.loads(challenge)
-        assert stored_challenge["difficulty"] == challenge_dict["difficulty"]
+        assert stored_challenge["difficulty_factor"] == challenge_dict["difficulty"]
         assert stored_challenge["duration"] == challenge_dict["duration"]
         error = get_challenge_from_redis(key, challenge_name)
         assert str(error) == CHALLENGE_NOT_FOUND
