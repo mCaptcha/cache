@@ -44,7 +44,7 @@ impl CacheError {
 
 impl From<String> for CacheError {
     fn from(e: String) -> Self {
-        CacheError::Msg(e.to_string())
+        CacheError::Msg(e)
     }
 }
 

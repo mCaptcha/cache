@@ -105,13 +105,13 @@ impl MCaptcha {
 
     /// get mcaptcha from redis key writable
     #[inline]
-    pub fn get_mut_mcaptcha<'a>(key: &'a RedisKeyWritable) -> CacheResult<Option<&'a mut Self>> {
+    pub fn get_mut_mcaptcha(key: &RedisKeyWritable) -> CacheResult<Option<&mut Self>> {
         Ok(key.get_value::<Self>(&MCAPTCHA_MCAPTCHA_TYPE)?)
     }
 
     /// get mcaptcha from redis key
     #[inline]
-    pub fn get_mcaptcha<'a>(key: &'a RedisKey) -> CacheResult<Option<&'a Self>> {
+    pub fn get_mcaptcha(key: &RedisKey) -> CacheResult<Option<&Self>> {
         Ok(key.get_value::<Self>(&MCAPTCHA_MCAPTCHA_TYPE)?)
     }
 
@@ -128,7 +128,7 @@ impl MCaptcha {
 
         match stored_captcha.get_value::<Self>(&MCAPTCHA_MCAPTCHA_TYPE)? {
             Some(val) => Ok(RedisValue::Integer(val.get_visitors().into())),
-            None => return Err(CacheError::CaptchaNotFound.into()),
+            None => Err(CacheError::CaptchaNotFound.into()),
         }
     }
 
@@ -137,7 +137,7 @@ impl MCaptcha {
         let mut args = args.into_iter().skip(1);
         let key_name = get_captcha_key(&args.next_string()?);
         let json = args.next_string()?;
-        let mcaptcha: CreateMCaptcha = Format::JSON.from_str(&json)?;
+        let mcaptcha: CreateMCaptcha = Format::Json.from_str(&json)?;
         let duration = mcaptcha.duration;
         let mcaptcha = Self::new(mcaptcha)?;
 
@@ -222,7 +222,7 @@ pub mod type_methods {
         let mcaptcha = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-                let mcaptcha: Result<MCaptcha, CacheError> = Format::JSON.from_str(&data);
+                let mcaptcha: Result<MCaptcha, CacheError> = Format::Json.from_str(&data);
                 if mcaptcha.is_err() {
                     panic!(
                         "Can't load mCaptcha from old redis RDB, error while serde {}, data received: {}",

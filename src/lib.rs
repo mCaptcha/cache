@@ -78,27 +78,30 @@ pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: 
 
     if utils::is_bucket_timer(key_name) {
         bucket::Bucket::on_delete(ctx, event_type, event, key_name);
-        return;
     } else if utils::is_mcaptcha_safety(key_name) {
         crate::safety::MCaptchaSafety::on_delete(ctx, event_type, event, key_name);
     }
 }
 
-redis_module! {
-    name: "mcaptcha_cahce",
-    version: PKG_VERSION,
-    data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
-    commands: [
-        ["mcaptcha_cache.add_visitor", bucket::Bucket::counter_create, "write", 1, 1, 1],
-        ["mcaptcha_cache.get", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
-        ["mcaptcha_cache.add_captcha", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
-        ["mcaptcha_cache.delete_captcha", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
-        ["mcaptcha_cache.captcha_exists", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
-        ["mcaptcha_cache.add_challenge", challenge::Challenge::create_challenge, "write", 1, 1, 1],
-        ["mcaptcha_cache.get_challenge", challenge::Challenge::get_challenge, "write", 1, 1, 1],
-    ],
-   event_handlers: [
-        [@EXPIRED @EVICTED: on_delete],
-        //TODO add expire/evicted event for safety
-    ]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub mod redis {
+    use super::*;
+
+    redis_module! {
+        name: "mcaptcha_cahce",
+        version: PKG_VERSION,
+        data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
+        commands: [
+            ["mcaptcha_cache.add_visitor", bucket::Bucket::counter_create, "write", 1, 1, 1],
+            ["mcaptcha_cache.get", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
+            ["mcaptcha_cache.add_captcha", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
+            ["mcaptcha_cache.delete_captcha", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
+            ["mcaptcha_cache.captcha_exists", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
+            ["mcaptcha_cache.add_challenge", challenge::Challenge::create_challenge, "write", 1, 1, 1],
+            ["mcaptcha_cache.get_challenge", challenge::Challenge::get_challenge, "write", 1, 1, 1],
+        ],
+       event_handlers: [
+            [@EXPIRED @EVICTED: on_delete],
+        ]
+    }
 }

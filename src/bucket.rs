@@ -38,20 +38,21 @@ const REDIS_MCAPTCHA_BUCKET_TYPE_VERSION: i32 = 0;
 #[derive(Debug, PartialEq)]
 /// encoding formats for persistence
 pub enum Format {
-    JSON,
+    Json,
 }
 
 impl Format {
     #[inline]
     pub fn parse_str<'a, T: Deserialize<'a>>(&self, data: &'a str) -> CacheResult<T> {
         match self {
-            Format::JSON => Ok(serde_json::from_str(data)?),
+            Format::Json => Ok(serde_json::from_str(data)?),
         }
     }
 
     #[inline]
     pub fn from_str<'a, T: Deserialize<'a>>(&self, data: &'a str) -> CacheResult<T> {
-        Ok(self.parse_str(data)?)
+        let res = self.parse_str(data)?;
+        Ok(res)
     }
 }
 
@@ -81,7 +82,6 @@ impl Bucket {
         let bucket = ctx.open_key_writable(&bucket_name);
         if bucket.key_type() == KeyType::Empty {
             ctx.log_debug(&format!("Bucket doesn't exist: {}", &key_name));
-            return;
         } else {
             Bucket::decrement_runner(ctx, &bucket);
         }
@@ -113,7 +113,7 @@ impl Bucket {
     fn decrement_runner(ctx: &Context, key: &RedisKeyWritable) {
         match key.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE) {
             Ok(Some(bucket)) => {
-                ctx.log_debug(&format!("entering loop hashmap "));
+                ctx.log_debug("entering loop hashmap");
                 for (captcha, count) in bucket.decrement.drain() {
                     ctx.log_debug(&format!(
                         "reading captcha: {} with decr count {}",
@@ -129,7 +129,7 @@ impl Bucket {
                 }
             }
             _ => {
-                ctx.log_debug(&format!("bucket not found, can't decrement"));
+                ctx.log_debug("bucket not found, can't decrement");
             }
         }
     }
@@ -275,7 +275,7 @@ pub mod type_methods {
         let bucket = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-                let bucket: Bucket = Format::JSON.from_str(&data).unwrap();
+                let bucket: Bucket = Format::Json.from_str(&data).unwrap();
                 bucket
             }
             _ => panic!("Can't load bucket from old redis RDB, encver: {}", encver,),

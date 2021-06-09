@@ -55,7 +55,7 @@ impl Challenge {
         let mut args = args.into_iter().skip(1);
         let captcha = args.next_string()?;
         let json = args.next_string()?;
-        let add_challenge: AddChallenge = Format::JSON.from_str(&json)?;
+        let add_challenge: AddChallenge = Format::Json.from_str(&json)?;
 
         let challenge_name = get_challenge_name(&captcha, &add_challenge.challenge);
 
@@ -131,7 +131,7 @@ pub mod type_methods {
         let challenge = match encver {
             0 => {
                 let data = raw::load_string(rdb);
-                let challenge: Result<Challenge, CacheError> = Format::JSON.from_str(&data);
+                let challenge: Result<Challenge, CacheError> = Format::Json.from_str(&data);
                 if challenge.is_err() {
                     panic!(
                         "Can't load Challenge from old redis RDB, error while serde {}, data received: {}",

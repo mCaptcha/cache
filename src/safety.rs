@@ -94,6 +94,7 @@ impl MCaptchaSafety {
         }
     }
 
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(ctx: &Context, duration: u64, mcaptcha_name: &str) -> CacheResult<()> {
         let safety_name = get_safety_name(mcaptcha_name);
         let safety = ctx.open_key_writable(&safety_name);
