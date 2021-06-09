@@ -19,7 +19,7 @@ jobs:
           override: true
 
       - name: generate documentation
-        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
+        if: github.repository == 'mcaptcha/cache'
         run: make doc
 
         #      - name: generate documentation
@@ -30,24 +30,9 @@ jobs:
         #          args: --no-deps --workspace --all-features
 
       - name: Deploy to GitHub Pages
-        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
+        if: github.repository == 'mcaptcha/cache'
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: target/doc
-
-          #      - name: generate documentation
-          #        if: github.repository == 'mCaptcha/libmcaptcha'
-          #        uses: actions-rs/cargo@v1
-          #        with:
-          #          command: doc
-          #          args: --no-deps --workspace --all-features
-          #
-          #      - name: Deploy to GitHub Pages
-          #        if: github.repository == 'mCaptcha/libmcaptcha'
-          #        uses: JamesIves/github-pages-deploy-action@3.7.1
-          #        with:
-          #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          #          BRANCH: gh-pages
-          #          FOLDER: target/doc
