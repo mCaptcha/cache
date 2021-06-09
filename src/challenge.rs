@@ -16,6 +16,7 @@
  */
 use std::time::Duration;
 
+use libmcaptcha::cache::AddChallenge;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
 use redis_module::NextArg;
@@ -34,13 +35,6 @@ const MCAPTCHA_CHALLENGE_VERSION: i32 = 0;
 pub struct Challenge {
     difficulty: usize,
     duration: u64,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AddChallenge {
-    difficulty: usize,
-    duration: u64,
-    challenge: String,
 }
 
 impl Challenge {
