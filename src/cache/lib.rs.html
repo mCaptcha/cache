@@ -105,6 +105,9 @@
 <span id="102">102</span>
 <span id="103">103</span>
 <span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
@@ -186,29 +189,32 @@
 
     <span class="kw">if</span> <span class="ident">utils</span>::<span class="ident">is_bucket_timer</span>(<span class="ident">key_name</span>) {
         <span class="ident">bucket</span>::<span class="ident">Bucket</span>::<span class="ident">on_delete</span>(<span class="ident">ctx</span>, <span class="ident">event_type</span>, <span class="ident">event</span>, <span class="ident">key_name</span>);
-        <span class="kw">return</span>;
     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">utils</span>::<span class="ident">is_mcaptcha_safety</span>(<span class="ident">key_name</span>) {
         <span class="kw">crate</span>::<span class="ident">safety</span>::<span class="ident">MCaptchaSafety</span>::<span class="ident">on_delete</span>(<span class="ident">ctx</span>, <span class="ident">event_type</span>, <span class="ident">event</span>, <span class="ident">key_name</span>);
     }
 }
 
-<span class="macro">redis_module</span><span class="macro">!</span> {
-    <span class="ident">name</span>: <span class="string">&quot;mcaptcha_cahce&quot;</span>,
-    <span class="ident">version</span>: <span class="ident">PKG_VERSION</span>,
-    <span class="ident">data_types</span>: [<span class="ident">MCAPTCHA_BUCKET_TYPE</span>, <span class="ident">MCAPTCHA_MCAPTCHA_TYPE</span>, <span class="ident">MCAPTCHA_SAFETY_TYPE</span>, <span class="ident">MCAPTCHA_CHALLENGE_TYPE</span>],
-    <span class="ident">commands</span>: [
-        [<span class="string">&quot;mcaptcha_cache.add_visitor&quot;</span>, <span class="ident">bucket</span>::<span class="ident">Bucket</span>::<span class="ident">counter_create</span>, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
-        [<span class="string">&quot;mcaptcha_cache.get&quot;</span>, <span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>::<span class="ident">get_count</span>, <span class="string">&quot;readonly&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
-        [<span class="string">&quot;mcaptcha_cache.add_captcha&quot;</span>, <span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>::<span class="ident">add_captcha</span>, <span class="string">&quot;readonly&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
-        [<span class="string">&quot;mcaptcha_cache.delete_captcha&quot;</span>, <span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>::<span class="ident">delete_captcha</span>, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
-        [<span class="string">&quot;mcaptcha_cache.captcha_exists&quot;</span>, <span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>::<span class="ident">captcha_exists</span>, <span class="string">&quot;readonly&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
-        [<span class="string">&quot;mcaptcha_cache.add_challenge&quot;</span>, <span class="ident">challenge</span>::<span class="ident">Challenge</span>::<span class="ident">create_challenge</span>, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
-        [<span class="string">&quot;mcaptcha_cache.get_challenge&quot;</span>, <span class="ident">challenge</span>::<span class="ident">Challenge</span>::<span class="ident">get_challenge</span>, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
-    ],
-   <span class="ident">event_handlers</span>: [
-        [@<span class="ident">EXPIRED</span> @<span class="ident">EVICTED</span>: <span class="ident">on_delete</span>],
-        <span class="comment">//TODO add expire/evicted event for safety</span>
-    ]
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">not_unsafe_ptr_arg_deref</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">redis</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+    <span class="macro">redis_module</span><span class="macro">!</span> {
+        <span class="ident">name</span>: <span class="string">&quot;mcaptcha_cahce&quot;</span>,
+        <span class="ident">version</span>: <span class="ident">PKG_VERSION</span>,
+        <span class="ident">data_types</span>: [<span class="ident">MCAPTCHA_BUCKET_TYPE</span>, <span class="ident">MCAPTCHA_MCAPTCHA_TYPE</span>, <span class="ident">MCAPTCHA_SAFETY_TYPE</span>, <span class="ident">MCAPTCHA_CHALLENGE_TYPE</span>],
+        <span class="ident">commands</span>: [
+            [<span class="string">&quot;mcaptcha_cache.add_visitor&quot;</span>, <span class="ident">bucket</span>::<span class="ident">Bucket</span>::<span class="ident">counter_create</span>, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
+            [<span class="string">&quot;mcaptcha_cache.get&quot;</span>, <span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>::<span class="ident">get_count</span>, <span class="string">&quot;readonly&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
+            [<span class="string">&quot;mcaptcha_cache.add_captcha&quot;</span>, <span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>::<span class="ident">add_captcha</span>, <span class="string">&quot;readonly&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
+            [<span class="string">&quot;mcaptcha_cache.delete_captcha&quot;</span>, <span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>::<span class="ident">delete_captcha</span>, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
+            [<span class="string">&quot;mcaptcha_cache.captcha_exists&quot;</span>, <span class="ident">mcaptcha</span>::<span class="ident">MCaptcha</span>::<span class="ident">captcha_exists</span>, <span class="string">&quot;readonly&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
+            [<span class="string">&quot;mcaptcha_cache.add_challenge&quot;</span>, <span class="ident">challenge</span>::<span class="ident">Challenge</span>::<span class="ident">create_challenge</span>, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
+            [<span class="string">&quot;mcaptcha_cache.get_challenge&quot;</span>, <span class="ident">challenge</span>::<span class="ident">Challenge</span>::<span class="ident">get_challenge</span>, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
+        ],
+       <span class="ident">event_handlers</span>: [
+            [@<span class="ident">EXPIRED</span> @<span class="ident">EVICTED</span>: <span class="ident">on_delete</span>],
+        ]
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="cache" data-search-js="../../search-index.js"></div>
