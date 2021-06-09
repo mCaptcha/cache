@@ -147,9 +147,16 @@ impl Bucket {
         let bucket = ctx.open_key_writable(&bucket_name);
         Bucket::decrement_runner(ctx, &bucket);
 
-        match bucket.delete() {
-            Err(e) => ctx.log_warning(&format!("enountered error while deleting hashmap: {:?}", e)),
-            Ok(_) => (),
+        if let Err(e) = bucket.delete() {
+            ctx.log_warning(&format!("enountered error while deleting hashmap: {:?}", e));
+        }
+
+        let timer = ctx.open_key_writable(&get_timer_name_from_bucket_name(&bucket_name));
+        if let Err(e) = timer.delete() {
+            ctx.log_warning(&format!(
+                "enountered error while deleting bucket tiemr: {:?}",
+                e
+            ));
         }
     }
 
