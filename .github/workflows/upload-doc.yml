@@ -1,0 +1,53 @@
+name: Upload Documentation
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable-x86_64-unknown-linux-gnu
+          profile: minimal
+          override: true
+
+      - name: generate documentation
+        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
+        run: make doc
+
+        #      - name: generate documentation
+        #        if: matrix.version == 'stable' && (github.repository == 'realaravinth/damn-vuln-blockchain')
+        #        uses: actions-rs/cargo@v1
+        #        with:
+        #          command: doc
+        #          args: --no-deps --workspace --all-features
+
+      - name: Deploy to GitHub Pages
+        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: target/doc
+
+          #      - name: generate documentation
+          #        if: github.repository == 'mCaptcha/libmcaptcha'
+          #        uses: actions-rs/cargo@v1
+          #        with:
+          #          command: doc
+          #          args: --no-deps --workspace --all-features
+          #
+          #      - name: Deploy to GitHub Pages
+          #        if: github.repository == 'mCaptcha/libmcaptcha'
+          #        uses: JamesIves/github-pages-deploy-action@3.7.1
+          #        with:
+          #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #          BRANCH: gh-pages
+          #          FOLDER: target/doc
