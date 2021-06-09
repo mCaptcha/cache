@@ -92,6 +92,11 @@
 <span id="89">89</span>
 <span id="90">90</span>
 <span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
@@ -166,6 +171,11 @@
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_mcaptcha_safety</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="ident">name</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">PREFIX_SAFETY</span>)
+}
+
+<span class="attribute">#[<span class="ident">inline</span>]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_challenge_name</span>(<span class="ident">captcha</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">challenge</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}:{{{}}}:{}&quot;</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">PREFIX_CHALLENGE</span>, <span class="ident">captcha</span>, <span class="ident">challenge</span>)
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>

@@ -341,9 +341,6 @@
 <span id="338">338</span>
 <span id="339">339</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">key</span>::<span class="ident">RedisKey</span>;
-<span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">RedisError</span>;
-<span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">RedisValue</span>;
 <span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
  *
@@ -361,9 +358,12 @@
  * along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */</span>
 <span class="kw">use</span> <span class="ident">libmcaptcha</span>::<span class="ident">dev</span>::{<span class="ident">AddVisitorResult</span>, <span class="ident">CreateMCaptcha</span>, <span class="ident">DefenseBuilder</span>, <span class="ident">MCaptchaBuilder</span>};
+<span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">key</span>::<span class="ident">RedisKey</span>;
 <span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">key</span>::<span class="ident">RedisKeyWritable</span>;
 <span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">native_types</span>::<span class="ident">RedisType</span>;
 <span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">raw</span>::<span class="ident">KeyType</span>;
+<span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">RedisError</span>;
+<span class="kw">use</span> <span class="ident">redis_module</span>::<span class="ident">RedisValue</span>;
 <span class="kw">use</span> <span class="ident">redis_module</span>::{<span class="ident">Context</span>, <span class="ident">RedisResult</span>};
 <span class="kw">use</span> <span class="ident">redis_module</span>::{<span class="ident">NextArg</span>, <span class="ident">REDIS_OK</span>};
 <span class="comment">//use redis_module::RedisError;</span>
