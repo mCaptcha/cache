@@ -35,7 +35,6 @@ use safety::MCAPTCHA_SAFETY_TYPE;
 
 /// Initial allocation ammount of bucket[bucket::Bucket]
 pub const HIT_PER_SECOND: usize = 100;
-
 pub const PKG_NAME: &str = "mcap";
 pub const PKG_VERSION: usize = 0;
 
@@ -47,14 +46,11 @@ pub const PKG_VERSION: usize = 0;
 // and PKG_NAME
 pub const PREFIX_BUCKET_TIMER: &str = "timer:";
 pub const PREFIX_SAFETY: &str = "safety:";
-
 /// If buckets perform clean up at x instant, then buckets themselves will get cleaned
 /// up at x + BUCKET_EXPIRY_OFFSET(if they haven't already been cleaned up)
 pub const BUCKET_EXPIRY_OFFSET: u64 = 30;
 
 lazy_static! {
-
-
     /// node unique identifier, useful when running in cluster mode
     pub static ref ID: usize = {
         use rand::prelude::*;
@@ -65,7 +61,6 @@ lazy_static! {
     pub static ref PREFIX_CAPTCHA: String = format!("{}:captcha::", PKG_NAME);
     /// bucket key prefix
     pub static ref PREFIX_BUCKET: String = format!("{}:bucket:{{{}}}:", PKG_NAME, *ID);
-
     pub static ref PREFIX_CHALLENGE: String = format!("{}:CHALLENGE", PKG_NAME);
 }
 
@@ -92,13 +87,14 @@ pub mod redis {
         version: PKG_VERSION,
         data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
         commands: [
-            ["mcaptcha_cache.add_visitor", bucket::Bucket::counter_create, "write", 1, 1, 1],
-            ["mcaptcha_cache.get", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
-            ["mcaptcha_cache.add_captcha", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
-            ["mcaptcha_cache.delete_captcha", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
-            ["mcaptcha_cache.captcha_exists", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
-            ["mcaptcha_cache.add_challenge", challenge::Challenge::create_challenge, "write", 1, 1, 1],
-            ["mcaptcha_cache.get_challenge", challenge::Challenge::get_challenge, "write", 1, 1, 1],
+            ["MCAPTCHA_CACHE.ADD_VISITOR", bucket::Bucket::counter_create, "write", 1, 1, 1],
+            ["MCAPTCHA_CACHE.GET", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
+            ["MCAPTCHA_CACHE.ADD_CAPTCHA", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
+            ["MCAPTCHA_CACHE.DELETE_CAPTCHA", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
+            ["MCAPTCHA_CACHE.CAPTCHA_EXISTS", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
+            ["MCAPTCHA_CACHE.ADD_CHALLENGE", challenge::Challenge::create_challenge, "write", 1, 1, 1],
+            ["MCAPTCHA_CACHE.GET_CHALLENGE", challenge::Challenge::get_challenge, "write", 1, 1, 1],
+            ["MCAPTCHA_CACHE.DELETE_CHALLENGE", challenge::Challenge::delete_challenge, "write", 1, 1, 1],
         ],
        event_handlers: [
             [@EXPIRED @EVICTED: on_delete],

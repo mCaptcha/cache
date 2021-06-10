@@ -33,6 +33,7 @@ class Runner(object):
         challenge.challenge_doesnt_exist,
         challenge.challenge_ttl_works,
         challenge.duplicate_challenge_works,
+        challenge.delete_challenge_works,
     ]
     __tasks = []
 

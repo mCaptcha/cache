@@ -33,11 +33,13 @@ utils.ping(r)
 
 COMMANDS = {
  "ADD" :"MCAPTCHA_CACHE.ADD_CHALLENGE",
- "GET" :"MCAPTCHA_CACHE.GET_CHALLENGE"
+ "GET" :"MCAPTCHA_CACHE.GET_CHALLENGE",
+ "DEL" :"MCAPTCHA_CACHE.DELETE_CHALLENGE"
 }
 
 CHALLENGE_NOT_FOUND = "Challenge not found"
 DUPLICATE_CHALLENGE = "Challenge already exists"
+REDIS_OK = bytes("OK", 'utf-8')
 
 def add_challenge(captcha, challenge):
     """Add challenge to Redis"""
@@ -53,6 +55,15 @@ def get_challenge_from_redis(captcha, challenge):
         return json.loads(data)
     except Exception as e:
         return e
+
+def delete_challenge(captcha, challenge):
+    """Add challenge to Redis"""
+    try :
+        data = r.execute_command(COMMANDS["DEL"], captcha, challenge)
+        return data
+    except Exception as e:
+        return e
+
 
 def get_challenge(challenge):
     """Get challenge JSON"""
@@ -127,5 +138,22 @@ async def duplicate_challenge_works():
         assert str(error) == DUPLICATE_CHALLENGE
 
         print("[*] Duplicate Challenge works")
+    except Exception as e:
+        raise e
+
+async def delete_challenge_works():
+    """Test: Delete Challenges"""
+    try:
+        challenge_name = "delete_challenge"
+        key  = challenge_name
+        challenge = get_challenge(challenge_name)
+
+        add_challenge(key, challenge)
+        resp = delete_challenge(key, challenge_name)
+        assert resp == REDIS_OK
+        resp = delete_challenge(key, challenge_name)
+        assert str(resp) == CHALLENGE_NOT_FOUND
+
+        print("[*] Delete Challenge works")
     except Exception as e:
         raise e

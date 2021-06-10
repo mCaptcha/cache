@@ -39,7 +39,7 @@ impl Challenge {
     pub fn new(duration: u64, difficulty: u32) -> Self {
         Self(AddVisitorResult {
             difficulty_factor: difficulty,
-            duration: duration,
+            duration,
         })
     }
 
@@ -55,12 +55,28 @@ impl Challenge {
         if key.key_type() != KeyType::Empty {
             return Err(CacheError::DuplicateChallenge.into());
         }
-        let challenge = Self::new(add_challenge.duration, add_challenge.difficulty);
+        let challenge = Self::new(add_challenge.duration, add_challenge.difficulty as u32);
 
         key.set_value(&MCAPTCHA_CHALLENGE_TYPE, challenge)?;
         key.set_expire(Duration::from_secs(add_challenge.duration))?;
 
         REDIS_OK
+    }
+
+    pub fn delete_challenge(ctx: &Context, args: Vec<String>) -> RedisResult {
+        let mut args = args.into_iter().skip(1);
+        let captcha = args.next_string()?;
+        let challenge = args.next_string()?;
+
+        let challenge_name = get_challenge_name(&captcha, &challenge);
+
+        let key = ctx.open_key_writable(&challenge_name);
+        if key.key_type() == KeyType::Empty {
+            Err(CacheError::ChallengeNotFound.into())
+        } else {
+            key.delete()?;
+            REDIS_OK
+        }
     }
 
     pub fn get_challenge(ctx: &Context, args: Vec<String>) -> RedisResult {

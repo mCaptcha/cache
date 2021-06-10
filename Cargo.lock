@@ -303,6 +303,7 @@ dependencies = [
 [[package]]
 name = "libmcaptcha"
 version = "0.1.4"
+source = "git+https://github.com/mCaptcha/libmcaptcha?branch=master#3671eea67fe247a371cfa6e28493d46c405e0371"
 dependencies = [
  "derive_builder",
  "derive_more",
