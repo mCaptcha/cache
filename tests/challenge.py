@@ -79,7 +79,7 @@ async def add_challenge_works():
     """Test: Add Challenge"""
     try:
         key = "add_challenge"
-        challenge_name = key
+        challenge_name = "add_challenge_challenge"
         challenge = get_challenge(challenge_name)
 
         add_challenge(key, challenge)
@@ -98,7 +98,7 @@ async def challenge_ttl_works():
     """Test: Challenge TTL"""
     try:
         key = "ttl_challenge"
-        challenge_name = key
+        challenge_name = "ttl_challenge_challenge"
         challenge = get_challenge(challenge_name)
 
         add_challenge(key, challenge)
@@ -116,7 +116,7 @@ async def challenge_doesnt_exist():
     """Test: Non-existent Challenge"""
     try:
         challenge_name = "nonexistent_challenge"
-        key  = challenge_name
+        key = "nonexistent_challenge_key"
 
         error = get_challenge_from_redis(key, challenge_name)
         assert str(error) == CHALLENGE_NOT_FOUND
@@ -145,7 +145,7 @@ async def delete_challenge_works():
     """Test: Delete Challenges"""
     try:
         challenge_name = "delete_challenge"
-        key  = challenge_name
+        key = "delete_challenge_key"
         challenge = get_challenge(challenge_name)
 
         add_challenge(key, challenge)
