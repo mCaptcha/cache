@@ -91,6 +91,7 @@ pub mod redis {
             ["MCAPTCHA_CACHE.GET", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
             ["MCAPTCHA_CACHE.ADD_CAPTCHA", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
             ["MCAPTCHA_CACHE.DELETE_CAPTCHA", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
+            ["MCAPTCHA_CACHE.RENAME_CAPTCHA", mcaptcha::MCaptcha::rename, "write", 1, 1, 1],
             ["MCAPTCHA_CACHE.CAPTCHA_EXISTS", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
             ["MCAPTCHA_CACHE.ADD_CHALLENGE", challenge::Challenge::create_challenge, "write", 1, 1, 1],
             ["MCAPTCHA_CACHE.GET_CHALLENGE", challenge::Challenge::get_challenge, "write", 1, 1, 1],

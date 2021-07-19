@@ -34,6 +34,7 @@ COMMANDS = {
     "ADD_CAPTCHA": "MCAPTCHA_CACHE.ADD_CAPTCHA",
     "DELETE_CAPTCHA": "MCAPTCHA_CACHE.DELETE_CAPTCHA",
     "CAPTCHA_EXISTS": "MCAPTCHA_CACHE.CAPTCHA_EXISTS",
+    "RENAME_CAPTCHA": "MCAPTCHA_CACHE.RENAME_CAPTCHA",
 }
 
 payload = json.dumps(MCAPTCHA)
@@ -42,8 +43,12 @@ def delete_captcha(key):
     r.execute_command(COMMANDS["DELETE_CAPTCHA"], key)
 
 
-def add_captcha(key, duration=5):
+def add_captcha(key):
     r.execute_command(COMMANDS["ADD_CAPTCHA"], key, payload)
+
+def rename_captcha(key, new_key):
+    r.execute_command(COMMANDS["RENAME_CAPTCHA"], key, new_key)
+
 
 
 def captcha_exists(key):
@@ -54,11 +59,11 @@ def captcha_exists(key):
     if exists == 1:
         return False
 
-def register(key, duration=5):
+def register(key):
     if captcha_exists(key):
         delete_captcha(key)
 
-    add_captcha(key, duration=5)
+    add_captcha(key)
 
 async def captcha_exists_works():
     key = "captcha_delete_works"
@@ -83,3 +88,15 @@ async def delete_captcha_works():
     delete_captcha(key)
     assert captcha_exists(key) is False
     print("[*] Delete captcha works")
+
+
+async def rename_captcha_works():
+    key = "rename_captcha_works"
+    new_key = "new_key_rename_captcha_works"
+    register(key)
+    exists = captcha_exists(key)
+    assert exists is True
+    rename_captcha(key, new_key)
+    assert captcha_exists(key) is False
+    assert captcha_exists(new_key) is True
+    print("[*] Rename captcha works")
