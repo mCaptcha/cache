@@ -249,8 +249,8 @@
 <span class="kw">use</span> <span class="ident">redis_module::key::RedisKeyWritable</span>;
 <span class="kw">use</span> <span class="ident">redis_module::native_types::RedisType</span>;
 <span class="kw">use</span> <span class="ident">redis_module::raw::KeyType</span>;
-<span class="kw">use</span> <span class="ident">redis_module::NotifyEvent</span>;
 <span class="kw">use</span> <span class="ident">redis_module</span>::{<span class="ident">raw</span>, <span class="ident">Context</span>};
+<span class="kw">use</span> <span class="ident">redis_module</span>::{<span class="ident">NotifyEvent</span>, <span class="ident">RedisString</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::bucket::Bucket</span>;
@@ -274,7 +274,7 @@
             <span class="kw">return</span>;
         }
         <span class="kw">let</span> <span class="ident">mcaptcha_name</span> <span class="op">=</span> <span class="ident">mcaptcha_name</span>.<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key</span>(<span class="ident">mcaptcha_name</span>);
+        <span class="kw">let</span> <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key</span>(<span class="kw-2">&amp;</span><span class="ident">RedisString::create</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">mcaptcha_name</span>));
         <span class="kw">if</span> <span class="ident">mcaptcha</span>.<span class="ident">key_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">KeyType::Empty</span> {
             <span class="ident">ctx</span>.<span class="ident">log_warning</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;mcaptcha {} is empty&quot;</span>, <span class="ident">mcaptcha_name</span>));
             <span class="kw">return</span>;
@@ -327,7 +327,7 @@
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::new_ret_no_self</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">duration</span>: <span class="ident">u64</span>, <span class="ident">mcaptcha_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CacheResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">safety_name</span> <span class="op">=</span> <span class="ident">get_safety_name</span>(<span class="ident">mcaptcha_name</span>);
-        <span class="kw">let</span> <span class="ident">safety</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">safety_name</span>);
+        <span class="kw">let</span> <span class="ident">safety</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">RedisString::create</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">safety_name</span>));
 
         <span class="kw">if</span> <span class="ident">safety</span>.<span class="ident">key_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">KeyType::Empty</span> {
             <span class="kw">let</span> <span class="ident">safety_val</span> <span class="op">=</span> <span class="ident">MCaptchaSafety</span> {};
@@ -356,7 +356,7 @@
 
     <span class="doccomment">/// executes when timer goes off. Refreshes expiry timer and resets timer</span>
     <span class="kw">fn</span> <span class="ident">boost</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, (<span class="ident">safety_name</span>, <span class="ident">duration</span>): (<span class="ident">String</span>, <span class="ident">u64</span>)) {
-        <span class="kw">let</span> <span class="ident">safety</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">safety_name</span>);
+        <span class="kw">let</span> <span class="ident">safety</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">RedisString::create</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">safety_name</span>));
 
         <span class="kw">match</span> <span class="ident">safety</span>.<span class="ident">get_value</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">MCAPTCHA_SAFETY_TYPE</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">_safety_val</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">Self</span><span class="ident">::set_timer</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">safety</span>, (<span class="ident">safety_name</span>, <span class="ident">duration</span>)) {
@@ -369,7 +369,7 @@
                     <span class="kw">return</span>;
                 }
                 <span class="kw">let</span> <span class="ident">mcaptcha_name</span> <span class="op">=</span> <span class="ident">mcaptcha_name</span>.<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key</span>(<span class="kw-2">&amp;</span><span class="ident">mcaptcha_name</span>);
+                <span class="kw">let</span> <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key</span>(<span class="kw-2">&amp;</span><span class="ident">RedisString::create</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">mcaptcha_name</span>));
                 <span class="kw">if</span> <span class="ident">mcaptcha</span>.<span class="ident">key_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">KeyType::Empty</span> {
                     <span class="kw">return</span>;
                 }

@@ -340,6 +340,7 @@
 <span id="337">337</span>
 <span id="338">338</span>
 <span id="339">339</span>
+<span id="340">340</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
@@ -363,6 +364,7 @@
 <span class="kw">use</span> <span class="ident">redis_module::native_types::RedisType</span>;
 <span class="kw">use</span> <span class="ident">redis_module::raw::KeyType</span>;
 <span class="kw">use</span> <span class="ident">redis_module::RedisError</span>;
+<span class="kw">use</span> <span class="ident">redis_module::RedisString</span>;
 <span class="kw">use</span> <span class="ident">redis_module::RedisValue</span>;
 <span class="kw">use</span> <span class="ident">redis_module</span>::{<span class="ident">Context</span>, <span class="ident">RedisResult</span>};
 <span class="kw">use</span> <span class="ident">redis_module</span>::{<span class="ident">NextArg</span>, <span class="ident">REDIS_OK</span>};
@@ -459,12 +461,12 @@
     }
 
     <span class="doccomment">/// Get counter value</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_count</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_count</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RedisString</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">into_iter</span>().<span class="ident">skip</span>(<span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">key_name</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">next_string</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">key_name</span> <span class="op">=</span> <span class="ident">get_captcha_key</span>(<span class="kw-2">&amp;</span><span class="ident">key_name</span>);
 
-        <span class="kw">let</span> <span class="ident">stored_captcha</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key</span>(<span class="kw-2">&amp;</span><span class="ident">key_name</span>);
+        <span class="kw">let</span> <span class="ident">stored_captcha</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key</span>(<span class="kw-2">&amp;</span><span class="ident">RedisString::create</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">key_name</span>));
         <span class="kw">if</span> <span class="ident">stored_captcha</span>.<span class="ident">key_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">KeyType::Empty</span> {
             <span class="kw">return</span> <span class="ident">CacheError::new</span>(<span class="macro">format!</span>(<span class="string">&quot;key {} not found&quot;</span>, <span class="ident">key_name</span>)).<span class="ident">into</span>();
         }
@@ -476,7 +478,7 @@
     }
 
     <span class="doccomment">/// Add captcha to redis</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_captcha</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_captcha</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RedisString</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">into_iter</span>().<span class="ident">skip</span>(<span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">key_name</span> <span class="op">=</span> <span class="ident">get_captcha_key</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">next_string</span>()<span class="question-mark">?</span>);
         <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">next_string</span>()<span class="question-mark">?</span>;
@@ -484,7 +486,7 @@
         <span class="kw">let</span> <span class="ident">duration</span> <span class="op">=</span> <span class="ident">mcaptcha</span>.<span class="ident">duration</span>;
         <span class="kw">let</span> <span class="ident">mcaptcha</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::new</span>(<span class="ident">mcaptcha</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">key_name</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">RedisString::create</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">key_name</span>));
         <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">key_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">KeyType::Empty</span> {
             <span class="ident">key</span>.<span class="ident">set_value</span>(<span class="kw-2">&amp;</span><span class="ident">MCAPTCHA_MCAPTCHA_TYPE</span>, <span class="ident">mcaptcha</span>)<span class="question-mark">?</span>;
             <span class="ident">ctx</span>.<span class="ident">log_debug</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;mcaptcha {} created&quot;</span>, <span class="ident">key_name</span>));
@@ -498,11 +500,11 @@
     }
 
     <span class="doccomment">/// check if captcha exists</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">captcha_exists</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">captcha_exists</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RedisString</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">into_iter</span>().<span class="ident">skip</span>(<span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">key_name</span> <span class="op">=</span> <span class="ident">get_captcha_key</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">next_string</span>()<span class="question-mark">?</span>);
 
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key</span>(<span class="kw-2">&amp;</span><span class="ident">key_name</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key</span>(<span class="kw-2">&amp;</span><span class="ident">RedisString::create</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">key_name</span>));
         <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">key_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">KeyType::Empty</span> {
             <span class="comment">// 1 is false</span>
             <span class="prelude-val">Ok</span>(<span class="ident">RedisValue::Integer</span>(<span class="number">1</span>))
@@ -513,11 +515,11 @@
     }
 
     <span class="doccomment">/// Add captcha to redis</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete_captcha</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete_captcha</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RedisString</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RedisResult</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">into_iter</span>().<span class="ident">skip</span>(<span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">key_name</span> <span class="op">=</span> <span class="ident">get_captcha_key</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">next_string</span>()<span class="question-mark">?</span>);
 
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">key_name</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">open_key_writable</span>(<span class="kw-2">&amp;</span><span class="ident">RedisString::create</span>(<span class="ident">ctx</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">key_name</span>));
         <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">key_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">KeyType::Empty</span> {
             <span class="prelude-val">Err</span>(<span class="ident">RedisError::nonexistent_key</span>())
         } <span class="kw">else</span> {
