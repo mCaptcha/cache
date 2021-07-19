@@ -22,6 +22,7 @@ use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
 use redis_module::NextArg;
 use redis_module::RedisResult;
+use redis_module::RedisString;
 use redis_module::REDIS_OK;
 use redis_module::{raw, Context};
 use serde::{Deserialize, Serialize};
@@ -43,7 +44,7 @@ impl Challenge {
         })
     }
 
-    pub fn create_challenge(ctx: &Context, args: Vec<String>) -> RedisResult {
+    pub fn create_challenge(ctx: &Context, args: Vec<RedisString>) -> RedisResult {
         let mut args = args.into_iter().skip(1);
         let captcha = args.next_string()?;
         let json = args.next_string()?;
@@ -51,7 +52,7 @@ impl Challenge {
 
         let challenge_name = get_challenge_name(&captcha, &add_challenge.challenge);
 
-        let key = ctx.open_key_writable(&challenge_name);
+        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, &challenge_name));
         if key.key_type() != KeyType::Empty {
             return Err(CacheError::DuplicateChallenge.into());
         }
@@ -63,14 +64,14 @@ impl Challenge {
         REDIS_OK
     }
 
-    pub fn delete_challenge(ctx: &Context, args: Vec<String>) -> RedisResult {
+    pub fn delete_challenge(ctx: &Context, args: Vec<RedisString>) -> RedisResult {
         let mut args = args.into_iter().skip(1);
         let captcha = args.next_string()?;
         let challenge = args.next_string()?;
 
         let challenge_name = get_challenge_name(&captcha, &challenge);
 
-        let key = ctx.open_key_writable(&challenge_name);
+        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, &challenge_name));
         if key.key_type() == KeyType::Empty {
             Err(CacheError::ChallengeNotFound.into())
         } else {
@@ -79,14 +80,14 @@ impl Challenge {
         }
     }
 
-    pub fn get_challenge(ctx: &Context, args: Vec<String>) -> RedisResult {
+    pub fn get_challenge(ctx: &Context, args: Vec<RedisString>) -> RedisResult {
         let mut args = args.into_iter().skip(1);
         let captcha = args.next_string()?;
         let challenge = args.next_string()?;
 
         let challenge_name = get_challenge_name(&captcha, &challenge);
 
-        let key = ctx.open_key_writable(&challenge_name);
+        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, &challenge_name));
         if key.key_type() == KeyType::Empty {
             return Err(CacheError::ChallengeNotFound.into());
         }

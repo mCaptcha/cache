@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use std::fmt::Display;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::errors::*;
@@ -49,7 +50,7 @@ pub fn get_bucket_instant(duration: u64) -> CacheResult<u64> {
 }
 
 #[inline]
-pub fn get_captcha_key(name: &str) -> String {
+pub fn get_captcha_key<T: Display>(name: &T) -> String {
     format!("{}{{{}}}", &*PREFIX_CAPTCHA, name)
 }
 

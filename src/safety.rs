@@ -19,8 +19,8 @@ use std::time::Duration;
 use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
 use redis_module::raw::KeyType;
-use redis_module::NotifyEvent;
 use redis_module::{raw, Context};
+use redis_module::{NotifyEvent, RedisString};
 use serde::{Deserialize, Serialize};
 
 use crate::bucket::Bucket;
@@ -44,7 +44,7 @@ impl MCaptchaSafety {
             return;
         }
         let mcaptcha_name = mcaptcha_name.unwrap();
-        let mcaptcha = ctx.open_key(mcaptcha_name);
+        let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, &mcaptcha_name));
         if mcaptcha.key_type() == KeyType::Empty {
             ctx.log_warning(&format!("mcaptcha {} is empty", mcaptcha_name));
             return;
@@ -97,7 +97,7 @@ impl MCaptchaSafety {
     #[allow(clippy::new_ret_no_self)]
     pub fn new(ctx: &Context, duration: u64, mcaptcha_name: &str) -> CacheResult<()> {
         let safety_name = get_safety_name(mcaptcha_name);
-        let safety = ctx.open_key_writable(&safety_name);
+        let safety = ctx.open_key_writable(&RedisString::create(ctx.ctx, &safety_name));
 
         if safety.key_type() == KeyType::Empty {
             let safety_val = MCaptchaSafety {};
@@ -126,7 +126,7 @@ impl MCaptchaSafety {
 
     /// executes when timer goes off. Refreshes expiry timer and resets timer
     fn boost(ctx: &Context, (safety_name, duration): (String, u64)) {
-        let safety = ctx.open_key_writable(&safety_name);
+        let safety = ctx.open_key_writable(&RedisString::create(ctx.ctx, &safety_name));
 
         match safety.get_value::<Self>(&MCAPTCHA_SAFETY_TYPE) {
             Ok(Some(_safety_val)) => match Self::set_timer(ctx, &safety, (safety_name, duration)) {
@@ -139,7 +139,7 @@ impl MCaptchaSafety {
                     return;
                 }
                 let mcaptcha_name = mcaptcha_name.unwrap();
-                let mcaptcha = ctx.open_key(&mcaptcha_name);
+                let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, &mcaptcha_name));
                 if mcaptcha.key_type() == KeyType::Empty {
                     return;
                 }
