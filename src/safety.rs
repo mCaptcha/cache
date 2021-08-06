@@ -44,7 +44,7 @@ impl MCaptchaSafety {
             return;
         }
         let mcaptcha_name = mcaptcha_name.unwrap();
-        let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, &mcaptcha_name));
+        let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, mcaptcha_name));
         if mcaptcha.key_type() == KeyType::Empty {
             ctx.log_warning(&format!("mcaptcha {} is empty", mcaptcha_name));
             return;
@@ -139,7 +139,7 @@ impl MCaptchaSafety {
                     return;
                 }
                 let mcaptcha_name = mcaptcha_name.unwrap();
-                let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, &mcaptcha_name));
+                let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, mcaptcha_name));
                 if mcaptcha.key_type() == KeyType::Empty {
                     return;
                 }
@@ -221,6 +221,6 @@ pub mod type_methods {
 
     #[allow(non_snake_case, unused)]
     pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
-        raw::save_string(rdb, &SAFETY_RDB_VAL)
+        raw::save_string(rdb, SAFETY_RDB_VAL)
     }
 }

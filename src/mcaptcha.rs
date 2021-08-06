@@ -147,11 +147,11 @@ impl MCaptcha {
     #[inline]
     fn add_captcha_runner(ctx: &Context, key_name: &str, mcaptcha: MCaptcha) -> RedisResult {
         let duration = mcaptcha.get_duration();
-        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, &key_name));
+        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, key_name));
         if key.key_type() == KeyType::Empty {
             key.set_value(&MCAPTCHA_MCAPTCHA_TYPE, mcaptcha)?;
             ctx.log_debug(&format!("mcaptcha {} created", key_name));
-            MCaptchaSafety::new(ctx, duration, &key_name)?;
+            MCaptchaSafety::new(ctx, duration, key_name)?;
             REDIS_OK
         } else {
             let msg = format!("mcaptcha {} exists", key_name);
@@ -212,7 +212,7 @@ impl MCaptcha {
 
     #[inline]
     fn delete_captcha_runner(ctx: &Context, key_name: &str) -> RedisResult {
-        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, &key_name));
+        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, key_name));
         if key.key_type() == KeyType::Empty {
             Err(RedisError::nonexistent_key())
         } else {
@@ -285,7 +285,7 @@ pub mod type_methods {
     pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
         let mcaptcha = &*(value as *mut MCaptcha);
         match &serde_json::to_string(mcaptcha) {
-            Ok(string) => raw::save_string(rdb, &string),
+            Ok(string) => raw::save_string(rdb, string),
             Err(e) => panic!("error while rdb_save: {}", e),
         }
     }

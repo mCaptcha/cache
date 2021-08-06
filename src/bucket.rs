@@ -78,9 +78,9 @@ impl Bucket {
 
         let bucket_name = bucket_name.unwrap();
 
-        let bucket = ctx.open_key_writable(&RedisString::create(ctx.ctx, &bucket_name));
+        let bucket = ctx.open_key_writable(&RedisString::create(ctx.ctx, bucket_name));
         if bucket.key_type() == KeyType::Empty {
-            ctx.log_debug(&format!("Bucket doesn't exist: {}", &key_name));
+            ctx.log_debug(&format!("Bucket doesn't exist: {}", key_name));
         } else {
             Bucket::decrement_runner(ctx, &bucket);
         }
@@ -303,7 +303,7 @@ pub mod type_methods {
     pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
         let bucket = &*(value as *mut Bucket);
         match &serde_json::to_string(bucket) {
-            Ok(string) => raw::save_string(rdb, &string),
+            Ok(string) => raw::save_string(rdb, string),
             Err(e) => eprintln!("error while rdb_save: {}", e),
         }
     }

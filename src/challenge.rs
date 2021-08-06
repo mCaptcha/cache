@@ -165,7 +165,7 @@ pub mod type_methods {
     pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
         let challenge = &*(value as *mut Challenge);
         match &serde_json::to_string(&challenge.0) {
-            Ok(string) => raw::save_string(rdb, &string),
+            Ok(string) => raw::save_string(rdb, string),
             Err(e) => panic!("error while rdb_save: {}", e),
         }
     }
