@@ -139,7 +139,7 @@ pub mod type_methods {
     pub extern "C" fn rdb_load(rdb: *mut raw::RedisModuleIO, encver: c_int) -> *mut c_void {
         let challenge = match encver {
             0 => {
-                let data = raw::load_string(rdb);
+                let data = raw::load_string(rdb).unwrap().to_string();
                 let challenge: Result<AddVisitorResult, CacheError> = Format::Json.from_str(&data);
                 if challenge.is_err() {
                     panic!(

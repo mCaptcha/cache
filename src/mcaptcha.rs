@@ -259,7 +259,7 @@ pub mod type_methods {
     pub extern "C" fn rdb_load(rdb: *mut raw::RedisModuleIO, encver: c_int) -> *mut c_void {
         let mcaptcha = match encver {
             0 => {
-                let data = raw::load_string(rdb);
+                let data = raw::load_string(rdb).unwrap().to_string();
                 let mcaptcha: Result<MCaptcha, CacheError> = Format::Json.from_str(&data);
                 if mcaptcha.is_err() {
                     panic!(

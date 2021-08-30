@@ -197,7 +197,7 @@ pub mod type_methods {
     pub extern "C" fn rdb_load(rdb: *mut raw::RedisModuleIO, encver: c_int) -> *mut c_void {
         let bucket = match encver {
             0 => {
-                let data = raw::load_string(rdb);
+                let data = raw::load_string(rdb).unwrap().to_string();
                 if data == SAFETY_RDB_VAL {
                     MCaptchaSafety {}
                 } else {
