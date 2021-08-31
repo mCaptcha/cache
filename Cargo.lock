@@ -330,7 +330,7 @@ dependencies = [
 [[package]]
 name = "libmcaptcha"
 version = "0.1.4"
-source = "git+https://github.com/mCaptcha/libmcaptcha?branch=master#b2684d93482cec8e40cd6ccbc2cee4be3b1eef25"
+source = "git+https://github.com/mCaptcha/libmcaptcha?branch=master#48220d78e706745a5208850c832ee8ba7e704601"
 dependencies = [
  "derive_builder",
  "derive_more",
@@ -427,9 +427,9 @@ checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.28"
+version = "1.0.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c7ed8b8c7b886ea3ed7dde405212185f423ab44682667c8c6dd14aa1d9f6612"
+checksum = "b9f5105d4fdaab20335ca9565e106a5d9b82b6219b5ba735731124ac6711d23d"
 dependencies = [
  "unicode-xid 0.2.2",
 ]

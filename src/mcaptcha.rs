@@ -50,9 +50,8 @@ impl MCaptcha {
     #[inline]
     fn new(mut m: CreateMCaptcha) -> CacheResult<Self> {
         let mut defense_builder = DefenseBuilder::default();
-        let mut defense_builder = &mut defense_builder;
         for l in m.levels.drain(0..) {
-            defense_builder = defense_builder.add_level(l)?;
+            defense_builder.add_level(l)?;
         }
         let defense = defense_builder.build()?;
 
@@ -70,13 +69,6 @@ impl MCaptcha {
         self.m.add_visitor()
     }
 
-    /// decrements the visitor count by one
-    #[inline]
-    #[allow(dead_code)]
-    pub fn decrement_visitor(&mut self) {
-        self.m.decrement_visitor()
-    }
-
     /// get current difficulty factor
     #[inline]
     #[allow(dead_code)]
@@ -86,14 +78,12 @@ impl MCaptcha {
 
     /// get [MCaptcha]'s lifetime
     #[inline]
-    #[allow(dead_code)]
     pub fn get_duration(&self) -> u64 {
         self.m.get_duration()
     }
 
     /// get [MCaptcha]'s current visitor_threshold
     #[inline]
-    #[allow(dead_code)]
     pub fn get_visitors(&self) -> u32 {
         self.m.get_visitors()
     }
@@ -127,7 +117,7 @@ impl MCaptcha {
             return CacheError::new(format!("key {} not found", key_name)).into();
         }
 
-        match stored_captcha.get_value::<Self>(&MCAPTCHA_MCAPTCHA_TYPE)? {
+        match Self::get_mcaptcha(&stored_captcha)? {
             Some(val) => Ok(RedisValue::Integer(val.get_visitors().into())),
             None => Err(CacheError::CaptchaNotFound.into()),
         }

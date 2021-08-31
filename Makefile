@@ -39,7 +39,7 @@ docker-stop:
 env:
 	./scripts/setup.sh
 
-test: 
+test:
 	cargo test  --all --all-features --no-fail-fast
 	./tests/test.py
 

@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+//! Custom datastructure that controls mCaptcha lifetime through it's expiration event handler
+//! and callbacks
 use std::time::Duration;
 
 use redis_module::key::RedisKeyWritable;
@@ -34,6 +36,8 @@ const MCAPTCHA_SAFETY_VERSION: i32 = 0;
 pub struct MCaptchaSafety;
 
 impl MCaptchaSafety {
+    /// When safety is deleted due to expiration, if mcaptcha exists in cache a new safety should
+    /// be created.
     pub fn on_delete(ctx: &Context, _event_type: NotifyEvent, _event: &str, key_name: &str) {
         if !is_mcaptcha_safety(key_name) {
             return;
@@ -128,31 +132,36 @@ impl MCaptchaSafety {
     fn boost(ctx: &Context, (safety_name, duration): (String, u64)) {
         let safety = ctx.open_key_writable(&RedisString::create(ctx.ctx, &safety_name));
 
-        match safety.get_value::<Self>(&MCAPTCHA_SAFETY_TYPE) {
-            Ok(Some(_safety_val)) => match Self::set_timer(ctx, &safety, (safety_name, duration)) {
-                Ok(_) => (),
-                Err(e) => ctx.log_warning(&format!("{}", e)),
-            },
-            _ => {
-                let mcaptcha_name = get_mcaptcha_from_safety(&safety_name);
-                if mcaptcha_name.is_none() {
-                    return;
-                }
-                let mcaptcha_name = mcaptcha_name.unwrap();
-                let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, mcaptcha_name));
-                if mcaptcha.key_type() == KeyType::Empty {
-                    return;
-                }
+        // if safety is available in cache then refresh timer
+        if let Ok(Some(_safety_val)) = safety.get_value::<Self>(&MCAPTCHA_SAFETY_TYPE) {
+            if let Err(e) = Self::set_timer(ctx, &safety, (safety_name, duration)) {
+                // if unable to create timer, then safety will expire and mcaptcha will be deleted
+                // as well. So when user requests pow config, there will be a cache miss, then
+                // config will be loaded from db. This is fine.
+                ctx.log_warning(&format!("{}", e))
+            }
+        // else create new safety
+        } else {
+            // see if mcaptcha exists before creating a safety for it.
+            // Cases where mcaptcha doesn't exist or key is empty are ignored
+            let mcaptcha_name = get_mcaptcha_from_safety(&safety_name);
+            if mcaptcha_name.is_none() {
+                return;
+            }
+            let mcaptcha_name = mcaptcha_name.unwrap();
+            let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, mcaptcha_name));
+            if mcaptcha.key_type() == KeyType::Empty {
+                return;
+            }
 
-                if let Ok(Some(_)) = MCaptcha::get_mcaptcha(&mcaptcha) {
-                    let res = Self::new(ctx, duration, mcaptcha_name);
-                    if res.is_err() {
-                        ctx.log_warning(&format!(
-                            "Error when creating safety timer for mcaptcha key: {}. Error: {}",
-                            mcaptcha_name,
-                            res.err().unwrap()
-                        ));
-                    }
+            if let Ok(Some(_)) = MCaptcha::get_mcaptcha(&mcaptcha) {
+                let res = Self::new(ctx, duration, mcaptcha_name);
+                if res.is_err() {
+                    ctx.log_warning(&format!(
+                        "Error when creating safety timer for mcaptcha key: {}. Error: {}",
+                        mcaptcha_name,
+                        res.err().unwrap()
+                    ));
                 }
             }
         }

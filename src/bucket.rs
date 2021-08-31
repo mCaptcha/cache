@@ -14,10 +14,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+//! Leaky bucket algorithim is implemantation for mcatpcha using batch processing Everytime count
+//! is increased for an mcaptcha object, a decrement job is added to a batch that is scheduled to
+//! be executed at that mcaptcha object's expiry rate(MCaptcha.get_duration())
 use std::collections::HashMap;
 use std::time::Duration;
-//use std::time::{SystemTime, UNIX_EPOCH};
 
 use redis_module::key::RedisKeyWritable;
 use redis_module::native_types::RedisType;
@@ -66,7 +67,12 @@ pub struct Bucket {
 }
 
 impl Bucket {
+    /// run when bucket is deleted from expiration
     pub fn on_delete(ctx: &Context, _event_type: NotifyEvent, _event: &str, key_name: &str) {
+        // TODO: this callback is executed after the bucket is deleted. So all jobs scheduled within
+        // the bucket are lost. This means, we could end up with stagnent increments in mcaptcha objects
+        // Rather than setting a timer, use a safety, upon who's expiry, the bucket's callback(job
+        // runner) will be executed
         if !is_bucket_timer(key_name) {
             return;
         }
