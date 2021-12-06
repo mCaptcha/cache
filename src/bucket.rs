@@ -67,7 +67,8 @@ pub struct Bucket {
 }
 
 impl Bucket {
-    /// run when bucket is deleted from expiration
+    /// Run when bucket timer expired at BUCKET_EXPIRY_OFFSET. Runs scheduled jobs in corresponding
+    /// if they haven't already executed
     pub fn on_delete(ctx: &Context, _event_type: NotifyEvent, _event: &str, key_name: &str) {
         // TODO: this callback is executed after the bucket is deleted. So all jobs scheduled within
         // the bucket are lost. This means, we could end up with stagnent increments in mcaptcha objects
