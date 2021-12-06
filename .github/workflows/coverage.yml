@@ -1,4 +1,4 @@
-name: CI (Linux)
+name: Coverage
 
 on:
   pull_request:
@@ -14,7 +14,6 @@ jobs:
       matrix:
         version:
           - stable
-          - nightly
 
     name: ${{ matrix.version }} - x86_64-unknown-linux-gnu
     runs-on: ubuntu-latest
@@ -37,30 +36,15 @@ jobs:
           profile: minimal
           override: false
 
-      - name: install virtualenv
-        run: pip install virtualenv
-
-      - name: install dependencies
-        run: make env
-
-      - name: build docker image
-        run: make docker-build
-
-      - name: start docker container
-        run: make docker-run
-
-      - name: run tests
-        run: make test
-
-      - name: stop docker container
-        run: make docker-stop
-
-      - name: Login to DockerHub
-        if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'realaravinth/pages'
-        uses: docker/login-action@v1
+      - name: Generate coverage file
+        if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
+        uses: actions-rs/tarpaulin@v0.1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          version: '0.15.0'
+          args: '-t 1200 --out Xml --all --all-features --no-fail-fast'
 
-      - name: build and publish docker images
-        run: make docker
+      - name: Upload to Codecov
+        if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
+        uses: codecov/codecov-action@v2
+        with:
+          file: cobertura.xml
