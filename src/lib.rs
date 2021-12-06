@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 use lazy_static::lazy_static;
 use redis_module::NotifyEvent;
 use redis_module::{redis_command, redis_event_handler, redis_module};
@@ -78,27 +80,22 @@ pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: 
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub mod redis {
-    use super::*;
-
-    redis_module! {
-        name: "mcaptcha_cahce",
-        version: PKG_VERSION,
-        data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
-        commands: [
-            ["MCAPTCHA_CACHE.ADD_VISITOR", bucket::Bucket::counter_create, "write", 1, 1, 1],
-            ["MCAPTCHA_CACHE.GET", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
-            ["MCAPTCHA_CACHE.ADD_CAPTCHA", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
-            ["MCAPTCHA_CACHE.DELETE_CAPTCHA", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
-            ["MCAPTCHA_CACHE.RENAME_CAPTCHA", mcaptcha::MCaptcha::rename, "write", 1, 1, 1],
-            ["MCAPTCHA_CACHE.CAPTCHA_EXISTS", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
-            ["MCAPTCHA_CACHE.ADD_CHALLENGE", challenge::Challenge::create_challenge, "write", 1, 1, 1],
-            ["MCAPTCHA_CACHE.GET_CHALLENGE", challenge::Challenge::get_challenge, "write", 1, 1, 1],
-            ["MCAPTCHA_CACHE.DELETE_CHALLENGE", challenge::Challenge::delete_challenge, "write", 1, 1, 1],
-        ],
-       event_handlers: [
-            [@EXPIRED @EVICTED: on_delete],
-        ]
-    }
+redis_module! {
+    name: "mcaptcha_cahce",
+    version: PKG_VERSION,
+    data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
+    commands: [
+        ["MCAPTCHA_CACHE.ADD_VISITOR", bucket::Bucket::counter_create, "write", 1, 1, 1],
+        ["MCAPTCHA_CACHE.GET", mcaptcha::MCaptcha::get_count, "readonly", 1, 1, 1],
+        ["MCAPTCHA_CACHE.ADD_CAPTCHA", mcaptcha::MCaptcha::add_captcha, "readonly", 1, 1, 1],
+        ["MCAPTCHA_CACHE.DELETE_CAPTCHA", mcaptcha::MCaptcha::delete_captcha, "write", 1, 1, 1],
+        ["MCAPTCHA_CACHE.RENAME_CAPTCHA", mcaptcha::MCaptcha::rename, "write", 1, 1, 1],
+        ["MCAPTCHA_CACHE.CAPTCHA_EXISTS", mcaptcha::MCaptcha::captcha_exists, "readonly", 1, 1, 1],
+        ["MCAPTCHA_CACHE.ADD_CHALLENGE", challenge::Challenge::create_challenge, "write", 1, 1, 1],
+        ["MCAPTCHA_CACHE.GET_CHALLENGE", challenge::Challenge::get_challenge, "write", 1, 1, 1],
+        ["MCAPTCHA_CACHE.DELETE_CHALLENGE", challenge::Challenge::delete_challenge, "write", 1, 1, 1],
+    ],
+   event_handlers: [
+        [@EXPIRED @EVICTED: on_delete],
+    ]
 }

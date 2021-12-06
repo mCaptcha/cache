@@ -1,6 +1,4 @@
-VERSION = "0.1.0:alpha-test"
-DOCKER_IMG = "mcaptcha/cache$(VERSION)"
-DOCKER_CONTAINER = "mcaptcha_cache_test"
+DOCKER_CONTAINER = "test_instance"
 
 default:
 	cargo build --release
@@ -21,17 +19,18 @@ doc:
 	cargo doc --no-deps --workspace --all-features --document-private-items
 
 docker:
-	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
-	docker push mcaptcha/cache:0.1.0-beta 
-	docker push mcaptcha/cache:latest
+	docker build -t mcaptcha/cache:broken-build .
+	#docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
+	#docker push mcaptcha/cache:0.1.0-beta 
+	docker push mcaptcha/cache:broken-build
 
 docker-build:
-	docker build -t $(DOCKER_IMG) .
+	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
 
 docker-run:
-	docker run --detach --name=$(DOCKER_CONTAINER) \
+	docker run --name=$(DOCKER_CONTAINER) \
 		--publish 6379:6379 \
-		$(DOCKER_IMG)
+		mcaptcha/cache:latest
 
 docker-stop:
 	docker stop $(DOCKER_CONTAINER) || true
@@ -43,6 +42,7 @@ env:
 	@-pip install codespell
 
 test:
+	@ . venv/bin/activate && ./scripts/spellcheck.sh -c
 	cargo test  --all --all-features --no-fail-fast
 	./tests/test.py
 

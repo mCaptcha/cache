@@ -37,30 +37,30 @@ jobs:
           profile: minimal
           override: false
 
-      - name: install virtualenv
-        run: pip install virtualenv
+            #      - name: install virtualenv
+            #        run: pip install virtualenv
+            #
+          #      - name: install dependencies
+          #        run: make env
+          #          #      - name: build docker image
+          #        run: make docker-build
+          #
+          #- name: start docker container
+          #  run: make docker-run
 
-      - name: install dependencies
-        run: make env
+          #- name: run tests
+          #  run: make test
 
-      - name: build docker image
-        run: make docker-build
-
-      - name: start docker container
-        run: make docker-run
-
-      - name: run tests
-        run: make test
-
-      - name: stop docker container
-        run: make docker-stop
+          #- name: stop docker container
+          #  run: make docker-stop
 
       - name: Login to DockerHub
-        if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'realaravinth/pages'
+        if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'mCaptcha/cache'
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: mcaptcha
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: build and publish docker images
+        if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'mCaptcha/cache'
         run: make docker

@@ -6,7 +6,7 @@ ARG OSNICK=bullseye
 # ARCH=x64|arm64v8|arm32v7
 ARG ARCH=x64
 
-FROM rust:1-bullseye as builder
+FROM rust:1.57-bullseye as builder
 WORKDIR /src
 RUN set -ex; \
     apt-get update; \
@@ -16,6 +16,7 @@ COPY Cargo.toml Cargo.lock /src/
 RUN mkdir -p /src/src && touch /src/src/lib.rs
 RUN cargo build --release 
 COPY . .
+RUN cargo build --release 
 
 
 #FROM redisfab/redis:${REDIS_VER}-${ARCH}-${OSNICK}
