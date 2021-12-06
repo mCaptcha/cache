@@ -1,3 +1,8 @@
 /target
 tarpaulin-report.html
 .env
+tests/
+docs/
+tmp/
+*.profraw
+venv/

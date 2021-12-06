@@ -1,22 +1,25 @@
-ARG REDIS_VER=6.2.2
+ARG REDIS_VER=6.2.6
 
 # stretch|bionic|buster
-ARG OSNICK=buster
+ARG OSNICK=bullseye
 
 # ARCH=x64|arm64v8|arm32v7
 ARG ARCH=x64
 
-FROM rust:latest as builder
+FROM rust:1-bullseye as builder
 WORKDIR /src
-COPY . .
 RUN set -ex; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends redis clang gcc
+COPY Cargo.toml Cargo.lock /src/
+RUN mkdir -p /src/src && touch /src/src/lib.rs
 RUN cargo build --release 
+COPY . .
 
 
-FROM redisfab/redis:${REDIS_VER}-${ARCH}-${OSNICK}
+#FROM redisfab/redis:${REDIS_VER}-${ARCH}-${OSNICK}
+FROM redis:${REDIS_VER}-${OSNICK}
 
 ARG REDIS_VER
 
