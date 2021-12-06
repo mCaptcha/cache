@@ -13,12 +13,12 @@ crate-type = ["cdylib"]
 name = "cache"
 
 [dependencies]
-redis-module = { version="0.23", features = ["experimental-api"]}
+redis-module = { version="0.24", features = ["experimental-api"]}
 libc = "0.2"
-serde_json = "1.0.64"
+serde_json = "1.0.72"
 serde = {version = "1.0.126", features = ["derive"]}
 lazy_static = "1.4.0"
-rand = "0.8.3"
+rand = "0.8.4"
 derive_more = "0.99"
 libmcaptcha = { branch = "master", git = "https://github.com/mCaptcha/libmcaptcha", features = ["minimal"], default-features = false }
 #libmcaptcha = { path = "../libmcaptcha", features = ["minimal"], default-features = false}

@@ -36,6 +36,7 @@ docker-run:
 docker-stop:
 	docker stop $(DOCKER_CONTAINER) || true
 	docker rm $(DOCKER_CONTAINER)
+
 env:
 	./scripts/setup.sh
 	@-virtualenv venv || true
