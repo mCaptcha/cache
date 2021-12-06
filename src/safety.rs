@@ -57,7 +57,7 @@ impl MCaptchaSafety {
         let mcaptcha_val = MCaptcha::get_mcaptcha(&mcaptcha);
         if mcaptcha_val.is_err() {
             ctx.log_warning(&format!(
-                "error occured while trying to access mcaptcha {}. error {} is empty",
+                "error occurred while trying to access mcaptcha {}. error {} is empty",
                 mcaptcha_name,
                 mcaptcha_val.err().unwrap()
             ));
@@ -66,7 +66,7 @@ impl MCaptchaSafety {
         let mcaptcha_val = mcaptcha_val.unwrap();
         if mcaptcha_val.is_none() {
             ctx.log_warning(&format!(
-                "error occured while trying to access mcaptcha {}. is none",
+                "error occurred while trying to access mcaptcha {}. is none",
                 mcaptcha_name,
             ));
             return;
@@ -77,7 +77,7 @@ impl MCaptchaSafety {
 
         if Self::new(ctx, duration, mcaptcha_name).is_err() {
             ctx.log_warning(&format!(
-                "error occured while creating safety for mcaptcha {}.",
+                "error occurred while creating safety for mcaptcha {}.",
                 mcaptcha_name,
             ));
         };

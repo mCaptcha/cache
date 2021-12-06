@@ -2,3 +2,4 @@
 *.rdb
 tmp/
 tarpaulin-report.html
+*.profraw

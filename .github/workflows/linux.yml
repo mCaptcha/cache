@@ -37,6 +37,9 @@ jobs:
           profile: minimal
           override: false
 
+      - name: install virtualenv
+        run: pip install virtualenv
+
       - name: install dependencies
         run: make env
 
@@ -52,19 +55,6 @@ jobs:
       - name: stop docker container
         run: make docker-stop
 
-        #      - name: build
-        #        uses: actions-rs/cargo@v1
-        #        with:
-        #          command: build
-        #          args: --all --bins --examples --tests
-        #
-        #      - name: tests
-        #        uses: actions-rs/cargo@v1
-        #        timeout-minutes: 40
-        #        with:
-        #          command: test
-        #          args: --all --all-features --no-fail-fast
-        #
       - name: Generate coverage file
         if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
         uses: actions-rs/tarpaulin@v0.1
@@ -74,25 +64,6 @@ jobs:
 
       - name: Upload to Codecov
         if: matrix.version == 'stable' && (github.ref == 'refs/heads/master' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           file: cobertura.xml
-
-          #      - name: generate documentation
-          #        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
-          #        run: make doc
-          #
-          #        #      - name: generate documentation
-          #        #        if: matrix.version == 'stable' && (github.repository == 'realaravinth/damn-vuln-blockchain')
-          #        #        uses: actions-rs/cargo@v1
-          #        #        with:
-          #        #          command: doc
-          #        #          args: --no-deps --workspace --all-features
-          #
-          #      - name: Deploy to GitHub Pages
-          #        if: matrix.version == 'stable' && (github.repository == 'mcaptcha/cache')
-          #        uses: JamesIves/github-pages-deploy-action@3.7.1
-          #        with:
-          #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          #          BRANCH: gh-pages
-          #          FOLDER: target/doc

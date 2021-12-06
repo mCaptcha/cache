@@ -38,6 +38,8 @@ docker-stop:
 	docker rm $(DOCKER_CONTAINER)
 env:
 	./scripts/setup.sh
+	@-virtualenv venv || true
+	@-pip install codespell
 
 test:
 	cargo test  --all --all-features --no-fail-fast
@@ -52,8 +54,12 @@ run-redis:
 stop-redis:
 	killall redis-server
 
-help:
+lint: ## Lint codebase
+	@ . venv/bin/activate && ./scripts/spellcheck.sh -w
+	cargo fmt -v --all -- --emit files
+	cargo clippy --workspace --tests --all-features
 
+help:
 	@echo  '  bench                   - run benchmarks'
 	@echo  '  clean                   - drop builds and environments'
 	@echo  '  coverage                - build test coverage in HTML format'

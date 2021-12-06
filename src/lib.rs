@@ -33,7 +33,7 @@ use challenge::MCAPTCHA_CHALLENGE_TYPE;
 use mcaptcha::MCAPTCHA_MCAPTCHA_TYPE;
 use safety::MCAPTCHA_SAFETY_TYPE;
 
-/// Initial allocation ammount of bucket[bucket::Bucket]
+/// Initial allocation amount of bucket[bucket::Bucket]
 pub const HIT_PER_SECOND: usize = 100;
 pub const PKG_NAME: &str = "mcap";
 pub const PKG_VERSION: usize = 0;

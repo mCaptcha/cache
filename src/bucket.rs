@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-//! Leaky bucket algorithim is implemantation for mcatpcha using batch processing Everytime count
+//! Leaky bucket algorithm is implemantation for mcatpcha using batch processing Everytime count
 //! is increased for an mcaptcha object, a decrement job is added to a batch that is scheduled to
 //! be executed at that mcaptcha object's expiry rate(MCaptcha.get_duration())
 use std::collections::HashMap;

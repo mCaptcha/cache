@@ -51,6 +51,6 @@ class Runner(object):
         for task in self.__tasks:
             await task
 
-    """Runs in seperate threads"""
+    """Runs in separate threads"""
     def __init__(self):
         super(Runner, self).__init__()

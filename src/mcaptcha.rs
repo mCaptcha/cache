@@ -289,48 +289,38 @@ mod tests {
     use libmcaptcha::defense::LevelBuilder;
 
     fn get_levels() -> Vec<Level> {
-        let mut levels = Vec::default();
-        levels.push(
+        vec![
             LevelBuilder::default()
                 .visitor_threshold(50)
                 .difficulty_factor(50)
                 .unwrap()
                 .build()
                 .unwrap(),
-        );
-        levels.push(
             LevelBuilder::default()
                 .visitor_threshold(500)
                 .difficulty_factor(5000)
                 .unwrap()
                 .build()
                 .unwrap(),
-        );
-        levels.push(
             LevelBuilder::default()
                 .visitor_threshold(5000)
                 .difficulty_factor(50000)
                 .unwrap()
                 .build()
                 .unwrap(),
-        );
-        levels.push(
             LevelBuilder::default()
                 .visitor_threshold(50000)
                 .difficulty_factor(500000)
                 .unwrap()
                 .build()
                 .unwrap(),
-        );
-        levels.push(
             LevelBuilder::default()
                 .visitor_threshold(500000)
                 .difficulty_factor(5000000)
                 .unwrap()
                 .build()
                 .unwrap(),
-        );
-        levels
+        ]
     }
 
     #[test]
