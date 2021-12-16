@@ -28,6 +28,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
+            /var/lib/docker
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install ${{ matrix.version }}
