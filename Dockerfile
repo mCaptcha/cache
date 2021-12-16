@@ -13,15 +13,13 @@ RUN set -ex; \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends redis clang gcc
 COPY Cargo.toml Cargo.lock /src/
-RUN mkdir -p /src/src && touch /src/src/lib.rs
-RUN cargo build --release 
-COPY . .
+COPY src/lib.rs /src/src/lib.rs
+RUN cargo build --release || true
+COPY . /src/
+RUN ls /src/src
 RUN cargo build --release 
 
-
-#FROM redisfab/redis:${REDIS_VER}-${ARCH}-${OSNICK}
 FROM redis:${REDIS_VER}-${OSNICK}
-
 ARG REDIS_VER
 
 ENV LIBDIR /usr/lib/redis/modules
@@ -29,6 +27,5 @@ WORKDIR /data
 RUN mkdir -p "$LIBDIR"
 
 COPY --from=builder /src/target/release/libcache.so "$LIBDIR"
-
 EXPOSE 6379
 CMD ["redis-server", "--loadmodule", "/usr/lib/redis/modules/libcache.so"]

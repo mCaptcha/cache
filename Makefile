@@ -19,16 +19,14 @@ doc:
 	cargo doc --no-deps --workspace --all-features --document-private-items
 
 docker:
-	docker build -t mcaptcha/cache:broken-build .
-	#docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
-	#docker push mcaptcha/cache:0.1.0-beta 
-	docker push mcaptcha/cache:broken-build
+	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
+	docker push mcaptcha/cache:0.1.0-beta 
 
 docker-build:
 	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
 
 docker-run:
-	docker run --name=$(DOCKER_CONTAINER) \
+	docker run -d --name=$(DOCKER_CONTAINER) \
 		--publish 6379:6379 \
 		mcaptcha/cache:latest
 

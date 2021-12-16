@@ -37,22 +37,23 @@ jobs:
           profile: minimal
           override: false
 
-            #      - name: install virtualenv
-            #        run: pip install virtualenv
-            #
-          #      - name: install dependencies
-          #        run: make env
-          #          #      - name: build docker image
-          #        run: make docker-build
-          #
-          #- name: start docker container
-          #  run: make docker-run
+      - name: install virtualenv
+        run: pip install virtualenv
 
-          #- name: run tests
-          #  run: make test
+      - name: install dependencies
+        run: make env
 
-          #- name: stop docker container
-          #  run: make docker-stop
+      - name: build docker image
+        run: make docker-build
+
+      - name: start docker container
+        run: make docker-run
+
+      - name: run tests
+        run: make test
+
+      - name: stop docker container
+        run: make docker-stop
 
       - name: Login to DockerHub
         if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'mCaptcha/cache'
