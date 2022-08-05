@@ -21,6 +21,7 @@ doc:
 docker:
 	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
 	docker push mcaptcha/cache:0.1.0-beta 
+	docker push mcaptcha/cache:latest
 
 docker-build:
 	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
