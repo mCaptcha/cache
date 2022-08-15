@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["SAFETY_RDB_VAL",""]],"fn":[["free",""],["rdb_load",""],["rdb_save",""]]});
+window.SIDEBAR_ITEMS = {"constant":[["SAFETY_RDB_VAL",""]],"fn":[["free",""],["rdb_load",""],["rdb_save",""]]};

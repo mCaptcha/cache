@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["CacheError",""]],"type":[["CacheResult",""]]});
+window.SIDEBAR_ITEMS = {"enum":[["CacheError",""]],"type":[["CacheResult",""]]};

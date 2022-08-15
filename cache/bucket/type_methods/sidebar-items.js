@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["free",""],["rdb_load",""],["rdb_save",""]]});
+window.SIDEBAR_ITEMS = {"fn":[["free",""],["rdb_load",""],["rdb_save",""]]};
