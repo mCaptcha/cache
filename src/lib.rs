@@ -83,7 +83,7 @@ pub mod redis {
     use super::*;
 
     redis_module! {
-        name: "mcaptcha_cahce",
+        name: "mcaptcha_cache",
         version: PKG_VERSION,
         data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
         commands: [
