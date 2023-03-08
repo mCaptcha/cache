@@ -1,3 +1,3 @@
-(function() {var implementors = {};
-implementors["cache"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.64.0/core/clone/trait.Clone.html\" title=\"trait core::clone::Clone\">Clone</a> for <a class=\"struct\" href=\"cache/bucket/struct.Bucket.html\" title=\"struct cache::bucket::Bucket\">Bucket</a>","synthetic":false,"types":["cache::bucket::Bucket"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {var implementors = {
+"cache":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.67.1/core/clone/trait.Clone.html\" title=\"trait core::clone::Clone\">Clone</a> for <a class=\"struct\" href=\"cache/bucket/struct.Bucket.html\" title=\"struct cache::bucket::Bucket\">Bucket</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
