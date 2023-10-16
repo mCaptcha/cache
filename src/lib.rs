@@ -15,11 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use lazy_static::lazy_static;
-use redis_module::NotifyEvent;
-use redis_module::{redis_command, redis_event_handler, redis_module};
-use redis_module::{NextArg, RedisResult};
+//use redis_module::{NotifyEvent, key};
+//use redis_module::{redis_command, redis_event_handler, redis_module};
+use redis_module::{
+    key, redis_command, redis_event_handler, redis_module, Context, NextArg, NotifyEvent,
+    RedisError, RedisResult, RedisString, RedisValue, Status,
+};
+//use redis_module::{NextArg, RedisResult};
 //use redis_module::RedisError;
-use redis_module::Context;
+//use redis_module::Context;
 
 mod bucket;
 mod challenge;
@@ -64,17 +68,19 @@ lazy_static! {
     pub static ref PREFIX_CHALLENGE: String = format!("{}:CHALLENGE", PKG_NAME);
 }
 
-pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &str) {
+pub fn on_delete(ctx: &Context, event_type: NotifyEvent, event: &str, key_name: &[u8]) {
+    let key_name = redis_module::RedisString::create_from_slice(ctx.ctx, key_name);
+    let key_name = key_name.to_string();
     let msg = format!(
         "Received event: {:?} on key: {} via event: {}",
         event_type, key_name, event
     );
     ctx.log_debug(msg.as_str());
 
-    if utils::is_bucket_timer(key_name) {
-        bucket::Bucket::on_delete(ctx, event_type, event, key_name);
-    } else if utils::is_mcaptcha_safety(key_name) {
-        crate::safety::MCaptchaSafety::on_delete(ctx, event_type, event, key_name);
+    if utils::is_bucket_timer(&key_name) {
+        bucket::Bucket::on_delete(ctx, event_type, event, &key_name);
+    } else if utils::is_mcaptcha_safety(&key_name) {
+        crate::safety::MCaptchaSafety::on_delete(ctx, event_type, event, &key_name);
     }
 }
 
@@ -85,6 +91,7 @@ pub mod redis {
     redis_module! {
         name: "mcaptcha_cache",
         version: PKG_VERSION,
+        allocator: (redis_module::alloc::RedisAlloc, redis_module::alloc::RedisAlloc),
         data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
         commands: [
             ["MCAPTCHA_CACHE.ADD_VISITOR", bucket::Bucket::counter_create, "write", 1, 1, 1],

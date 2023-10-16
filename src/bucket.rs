@@ -85,7 +85,10 @@ impl Bucket {
 
         let bucket_name = bucket_name.unwrap();
 
-        let bucket = ctx.open_key_writable(&RedisString::create(ctx.ctx, bucket_name));
+        let bucket = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            bucket_name.as_bytes(),
+        ));
         if bucket.key_type() == KeyType::Empty {
             ctx.log_debug(&format!("Bucket doesn't exist: {}", key_name));
         } else {
@@ -125,8 +128,10 @@ impl Bucket {
                         "reading captcha: {} with decr count {}",
                         &captcha, count
                     ));
-                    let stored_captcha =
-                        ctx.open_key_writable(&RedisString::create(ctx.ctx, &captcha));
+                    let stored_captcha = ctx.open_key_writable(&RedisString::create_from_slice(
+                        ctx.ctx,
+                        captcha.as_bytes(),
+                    ));
                     if stored_captcha.key_type() == KeyType::Empty {
                         continue;
                     }
@@ -146,24 +151,27 @@ impl Bucket {
         // get  bucket
         let bucket_name = get_bucket_name(bucket_instant);
 
-        let timer = ctx.open_key_writable(&RedisString::create(
+        let timer = ctx.open_key_writable(&RedisString::create_from_slice(
             ctx.ctx,
-            &get_timer_name_from_bucket_name(&bucket_name),
+            get_timer_name_from_bucket_name(&bucket_name).as_bytes(),
         ));
         let _ = timer.delete();
 
         ctx.log_debug(&format!("Bucket instant: {}", &bucket_instant));
 
-        let bucket = ctx.open_key_writable(&RedisString::create(ctx.ctx, &bucket_name));
+        let bucket = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            bucket_name.as_bytes(),
+        ));
         Bucket::decrement_runner(ctx, &bucket);
 
         if let Err(e) = bucket.delete() {
             ctx.log_warning(&format!("enountered error while deleting hashmap: {:?}", e));
         }
 
-        let timer = ctx.open_key_writable(&RedisString::create(
+        let timer = ctx.open_key_writable(&RedisString::create_from_slice(
             ctx.ctx,
-            &get_timer_name_from_bucket_name(&bucket_name),
+            get_timer_name_from_bucket_name(&bucket_name).as_bytes(),
         ));
         if let Err(e) = timer.delete() {
             ctx.log_warning(&format!(
@@ -179,7 +187,10 @@ impl Bucket {
         let captcha_name = get_captcha_key(&captcha);
         //        ctx.log_debug(&captcha_name);
         // increment
-        let captcha = ctx.open_key_writable(&RedisString::create(ctx.ctx, &captcha_name));
+        let captcha = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            captcha_name.as_bytes(),
+        ));
         ctx.log_debug("loading mcaptcha");
         let captcha = MCaptcha::get_mut_mcaptcha(&captcha)?;
 
@@ -216,7 +227,10 @@ impl Bucket {
         //        ctx.log_debug(&format!("Bucket name: {}", &bucket_name));
 
         // get  bucket
-        let bucket = ctx.open_key_writable(&RedisString::create(ctx.ctx, &bucket_name));
+        let bucket = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            bucket_name.as_bytes(),
+        ));
 
         match bucket.get_value::<Bucket>(&MCAPTCHA_BUCKET_TYPE)? {
             Some(bucket) => match bucket.decrement.get_mut(&captcha_name) {
@@ -230,9 +244,9 @@ impl Bucket {
                 let mut counter = Bucket::new(ctx, duration)?;
                 counter.decrement.insert(captcha_name, 1);
                 bucket.set_value(&MCAPTCHA_BUCKET_TYPE, counter)?;
-                let timer = ctx.open_key_writable(&RedisString::create(
+                let timer = ctx.open_key_writable(&RedisString::create_from_slice(
                     ctx.ctx,
-                    &get_timer_name_from_bucket_name(&bucket_name),
+                    get_timer_name_from_bucket_name(&bucket_name).as_bytes(),
                 ));
                 timer.write("1")?;
                 timer.set_expire(Duration::from_secs(duration + BUCKET_EXPIRY_OFFSET))?;
@@ -265,16 +279,21 @@ pub static MCAPTCHA_BUCKET_TYPE: RedisType = RedisType::new(
 
         // Currently unused by Redis
         mem_usage: None,
+        mem_usage2: None,
         digest: None,
 
         // Aux data
         aux_load: None,
         aux_save: None,
+        aux_save2: None,
         aux_save_triggers: 0,
 
         free_effort: None,
+        free_effort2: None,
         unlink: None,
+        unlink2: None,
         copy: None,
+        copy2: None,
         defrag: None,
     },
 );
