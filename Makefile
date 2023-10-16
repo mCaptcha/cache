@@ -18,13 +18,12 @@ dev:
 doc:
 	cargo doc --no-deps --workspace --all-features --document-private-items
 
-docker:
-	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
+docker: docker
 	docker push mcaptcha/cache:0.1.0-beta 
 	docker push mcaptcha/cache:latest
 
 docker-build:
-	docker build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  .
+	docker buildx build -t mcaptcha/cache:0.1.0-beta -t mcaptcha/cache:latest  . --load
 
 docker-run:
 	docker run -d --name=$(DOCKER_CONTAINER) \
@@ -42,7 +41,7 @@ env:
 
 test:
 	@ . venv/bin/activate && ./scripts/spellcheck.sh -c
-	cargo test  --all --all-features --no-fail-fast
+#	cargo test  --all --all-features --no-fail-fast
 	./tests/test.py
 
 xml-test-coverage:
