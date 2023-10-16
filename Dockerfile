@@ -1,7 +1,7 @@
-ARG REDIS_VER=6.2.6
+ARG REDIS_VER=7.0
 
 # stretch|bionic|buster
-ARG OSNICK=bullseye
+ARG OSNICK=bookworm
 
 # ARCH=x64|arm64v8|arm32v7
 ARG ARCH=x64
