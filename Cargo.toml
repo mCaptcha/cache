@@ -20,7 +20,7 @@ serde = {version = "1.0.137", features = ["derive"]}
 lazy_static = "1.4"
 rand = "0.8"
 derive_more = "0.99"
-libmcaptcha = { version = "0.2.4", tag="0.2.4", git = "https://github.com/mCaptcha/libmcaptcha", features = ["minimal"], default-features = false }
+libmcaptcha = "0.2.4"
 #libmcaptcha = { path = "../libmcaptcha", features = ["minimal"], default-features = false}
 
 #[target.x86_64-unknown-linux-musl]
