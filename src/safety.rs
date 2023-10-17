@@ -48,7 +48,10 @@ impl MCaptchaSafety {
             return;
         }
         let mcaptcha_name = mcaptcha_name.unwrap();
-        let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, mcaptcha_name));
+        let mcaptcha = ctx.open_key(&RedisString::create_from_slice(
+            ctx.ctx,
+            mcaptcha_name.as_bytes(),
+        ));
         if mcaptcha.key_type() == KeyType::Empty {
             ctx.log_warning(&format!("mcaptcha {} is empty", mcaptcha_name));
             return;
@@ -101,7 +104,10 @@ impl MCaptchaSafety {
     #[allow(clippy::new_ret_no_self)]
     pub fn new(ctx: &Context, duration: u64, mcaptcha_name: &str) -> CacheResult<()> {
         let safety_name = get_safety_name(mcaptcha_name);
-        let safety = ctx.open_key_writable(&RedisString::create(ctx.ctx, &safety_name));
+        let safety = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            safety_name.as_bytes(),
+        ));
 
         if safety.key_type() == KeyType::Empty {
             let safety_val = MCaptchaSafety {};
@@ -130,7 +136,10 @@ impl MCaptchaSafety {
 
     /// executes when timer goes off. Refreshes expiry timer and resets timer
     fn boost(ctx: &Context, (safety_name, duration): (String, u64)) {
-        let safety = ctx.open_key_writable(&RedisString::create(ctx.ctx, &safety_name));
+        let safety = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            safety_name.as_bytes(),
+        ));
 
         // if safety is available in cache then refresh timer
         if let Ok(Some(_safety_val)) = safety.get_value::<Self>(&MCAPTCHA_SAFETY_TYPE) {
@@ -149,7 +158,10 @@ impl MCaptchaSafety {
                 return;
             }
             let mcaptcha_name = mcaptcha_name.unwrap();
-            let mcaptcha = ctx.open_key(&RedisString::create(ctx.ctx, mcaptcha_name));
+            let mcaptcha = ctx.open_key(&RedisString::create_from_slice(
+                ctx.ctx,
+                mcaptcha_name.as_bytes(),
+            ));
             if mcaptcha.key_type() == KeyType::Empty {
                 return;
             }
@@ -180,16 +192,21 @@ pub static MCAPTCHA_SAFETY_TYPE: RedisType = RedisType::new(
 
         // Currently unused by Redis
         mem_usage: None,
+        mem_usage2: None,
         digest: None,
 
         // Aux data
         aux_load: None,
         aux_save: None,
+        aux_save2: None,
         aux_save_triggers: 0,
 
         free_effort: None,
+        free_effort2: None,
         unlink: None,
+        unlink2: None,
         copy: None,
+        copy2: None,
         defrag: None,
     },
 );

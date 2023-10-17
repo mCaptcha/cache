@@ -52,7 +52,10 @@ impl Challenge {
 
         let challenge_name = get_challenge_name(&captcha, &add_challenge.challenge);
 
-        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, &challenge_name));
+        let key = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            challenge_name.as_bytes(),
+        ));
         if key.key_type() != KeyType::Empty {
             return Err(CacheError::DuplicateChallenge.into());
         }
@@ -71,7 +74,10 @@ impl Challenge {
 
         let challenge_name = get_challenge_name(&captcha, &challenge);
 
-        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, &challenge_name));
+        let key = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            challenge_name.as_bytes(),
+        ));
         if key.key_type() == KeyType::Empty {
             Err(CacheError::ChallengeNotFound.into())
         } else {
@@ -87,7 +93,10 @@ impl Challenge {
 
         let challenge_name = get_challenge_name(&captcha, &challenge);
 
-        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, &challenge_name));
+        let key = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            challenge_name.as_bytes(),
+        ));
         if key.key_type() == KeyType::Empty {
             return Err(CacheError::ChallengeNotFound.into());
         }
@@ -114,16 +123,21 @@ pub static MCAPTCHA_CHALLENGE_TYPE: RedisType = RedisType::new(
 
         // Currently unused by Redis
         mem_usage: None,
+        mem_usage2: None,
         digest: None,
 
         // Aux data
         aux_load: None,
         aux_save: None,
+        aux_save2: None,
         aux_save_triggers: 0,
 
         free_effort: None,
+        free_effort2: None,
         unlink: None,
+        unlink2: None,
         copy: None,
+        copy2: None,
         defrag: None,
     },
 );

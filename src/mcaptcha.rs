@@ -112,7 +112,10 @@ impl MCaptcha {
         let key_name = args.next_string()?;
         let key_name = get_captcha_key(&key_name);
 
-        let stored_captcha = ctx.open_key(&RedisString::create(ctx.ctx, &key_name));
+        let stored_captcha = ctx.open_key(&RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         if stored_captcha.key_type() == KeyType::Empty {
             return CacheError::new(format!("key {} not found", key_name)).into();
         }
@@ -137,7 +140,10 @@ impl MCaptcha {
     #[inline]
     fn add_captcha_runner(ctx: &Context, key_name: &str, mcaptcha: MCaptcha) -> RedisResult {
         let duration = mcaptcha.get_duration();
-        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, key_name));
+        let key = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         if key.key_type() == KeyType::Empty {
             key.set_value(&MCAPTCHA_MCAPTCHA_TYPE, mcaptcha)?;
             ctx.log_debug(&format!("mcaptcha {} created", key_name));
@@ -155,7 +161,10 @@ impl MCaptcha {
         let mut args = args.into_iter().skip(1);
         let key_name = get_captcha_key(&args.next_string()?);
 
-        let key = ctx.open_key(&RedisString::create(ctx.ctx, &key_name));
+        let key = ctx.open_key(&RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         if Self::captcha_exists_runner(&key) {
             Ok(RedisValue::Integer(0))
         } else {
@@ -175,7 +184,10 @@ impl MCaptcha {
         let key_name = get_captcha_key(&args.next_string()?);
         let new_name = get_captcha_key(&args.next_string()?);
 
-        let key = ctx.open_key(&RedisString::create(ctx.ctx, &key_name));
+        let key = ctx.open_key(&RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         if Self::captcha_exists_runner(&key) {
             if let Some(mcaptcha) = Self::get_mcaptcha(&key)? {
                 let mcaptcha = MCaptcha {
@@ -202,7 +214,10 @@ impl MCaptcha {
 
     #[inline]
     fn delete_captcha_runner(ctx: &Context, key_name: &str) -> RedisResult {
-        let key = ctx.open_key_writable(&RedisString::create(ctx.ctx, key_name));
+        let key = ctx.open_key_writable(&RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         if key.key_type() == KeyType::Empty {
             Err(RedisError::nonexistent_key())
         } else {
@@ -224,16 +239,21 @@ pub static MCAPTCHA_MCAPTCHA_TYPE: RedisType = RedisType::new(
 
         // Currently unused by Redis
         mem_usage: None,
+        mem_usage2: None,
         digest: None,
 
         // Aux data
         aux_load: None,
         aux_save: None,
+        aux_save2: None,
         aux_save_triggers: 0,
 
         free_effort: None,
+        free_effort2: None,
         unlink: None,
+        unlink2: None,
         copy: None,
+        copy2: None,
         defrag: None,
     },
 );

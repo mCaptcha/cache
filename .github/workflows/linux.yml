@@ -35,7 +35,6 @@ jobs:
             /var/lib/docker
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-
       - name: configure GPG key
         if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'mCaptcha/cache'
         run: echo -n "$RELEASE_BOT_GPG_SIGNING_KEY" | gpg --batch --import --pinentry-mode loopback
