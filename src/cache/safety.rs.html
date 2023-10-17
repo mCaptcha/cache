@@ -233,6 +233,23 @@
 <a href="#233" id="233">233</a>
 <a href="#234" id="234">234</a>
 <a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
  *
@@ -283,7 +300,10 @@
             <span class="kw">return</span>;
         }
         <span class="kw">let </span>mcaptcha_name = mcaptcha_name.unwrap();
-        <span class="kw">let </span>mcaptcha = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, mcaptcha_name));
+        <span class="kw">let </span>mcaptcha = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            mcaptcha_name.as_bytes(),
+        ));
         <span class="kw">if </span>mcaptcha.key_type() == KeyType::Empty {
             ctx.log_warning(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;mcaptcha {} is empty&quot;</span>, mcaptcha_name));
             <span class="kw">return</span>;
@@ -336,7 +356,10 @@
     <span class="attr">#[allow(clippy::new_ret_no_self)]
     </span><span class="kw">pub fn </span>new(ctx: <span class="kw-2">&amp;</span>Context, duration: u64, mcaptcha_name: <span class="kw-2">&amp;</span>str) -&gt; CacheResult&lt;()&gt; {
         <span class="kw">let </span>safety_name = get_safety_name(mcaptcha_name);
-        <span class="kw">let </span>safety = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, <span class="kw-2">&amp;</span>safety_name));
+        <span class="kw">let </span>safety = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            safety_name.as_bytes(),
+        ));
 
         <span class="kw">if </span>safety.key_type() == KeyType::Empty {
             <span class="kw">let </span>safety_val = MCaptchaSafety {};
@@ -365,7 +388,10 @@
 
     <span class="doccomment">/// executes when timer goes off. Refreshes expiry timer and resets timer
     </span><span class="kw">fn </span>boost(ctx: <span class="kw-2">&amp;</span>Context, (safety_name, duration): (String, u64)) {
-        <span class="kw">let </span>safety = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, <span class="kw-2">&amp;</span>safety_name));
+        <span class="kw">let </span>safety = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            safety_name.as_bytes(),
+        ));
 
         <span class="comment">// if safety is available in cache then refresh timer
         </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(_safety_val)) = safety.get_value::&lt;<span class="self">Self</span>&gt;(<span class="kw-2">&amp;</span>MCAPTCHA_SAFETY_TYPE) {
@@ -384,7 +410,10 @@
                 <span class="kw">return</span>;
             }
             <span class="kw">let </span>mcaptcha_name = mcaptcha_name.unwrap();
-            <span class="kw">let </span>mcaptcha = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, mcaptcha_name));
+            <span class="kw">let </span>mcaptcha = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+                ctx.ctx,
+                mcaptcha_name.as_bytes(),
+            ));
             <span class="kw">if </span>mcaptcha.key_type() == KeyType::Empty {
                 <span class="kw">return</span>;
             }
@@ -415,16 +444,21 @@
 
         <span class="comment">// Currently unused by Redis
         </span>mem_usage: <span class="prelude-val">None</span>,
+        mem_usage2: <span class="prelude-val">None</span>,
         digest: <span class="prelude-val">None</span>,
 
         <span class="comment">// Aux data
         </span>aux_load: <span class="prelude-val">None</span>,
         aux_save: <span class="prelude-val">None</span>,
+        aux_save2: <span class="prelude-val">None</span>,
         aux_save_triggers: <span class="number">0</span>,
 
         free_effort: <span class="prelude-val">None</span>,
+        free_effort2: <span class="prelude-val">None</span>,
         unlink: <span class="prelude-val">None</span>,
+        unlink2: <span class="prelude-val">None</span>,
         copy: <span class="prelude-val">None</span>,
+        copy2: <span class="prelude-val">None</span>,
         defrag: <span class="prelude-val">None</span>,
     },
 );

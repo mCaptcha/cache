@@ -355,6 +355,26 @@
 <a href="#355" id="355">355</a>
 <a href="#356" id="356">356</a>
 <a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
  *
@@ -469,7 +489,10 @@
         <span class="kw">let </span>key_name = args.next_string()<span class="question-mark">?</span>;
         <span class="kw">let </span>key_name = get_captcha_key(<span class="kw-2">&amp;</span>key_name);
 
-        <span class="kw">let </span>stored_captcha = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, <span class="kw-2">&amp;</span>key_name));
+        <span class="kw">let </span>stored_captcha = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         <span class="kw">if </span>stored_captcha.key_type() == KeyType::Empty {
             <span class="kw">return </span>CacheError::new(<span class="macro">format!</span>(<span class="string">&quot;key {} not found&quot;</span>, key_name)).into();
         }
@@ -494,7 +517,10 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>add_captcha_runner(ctx: <span class="kw-2">&amp;</span>Context, key_name: <span class="kw-2">&amp;</span>str, mcaptcha: MCaptcha) -&gt; RedisResult {
         <span class="kw">let </span>duration = mcaptcha.get_duration();
-        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, key_name));
+        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         <span class="kw">if </span>key.key_type() == KeyType::Empty {
             key.set_value(<span class="kw-2">&amp;</span>MCAPTCHA_MCAPTCHA_TYPE, mcaptcha)<span class="question-mark">?</span>;
             ctx.log_debug(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;mcaptcha {} created&quot;</span>, key_name));
@@ -512,7 +538,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>args = args.into_iter().skip(<span class="number">1</span>);
         <span class="kw">let </span>key_name = get_captcha_key(<span class="kw-2">&amp;</span>args.next_string()<span class="question-mark">?</span>);
 
-        <span class="kw">let </span>key = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, <span class="kw-2">&amp;</span>key_name));
+        <span class="kw">let </span>key = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         <span class="kw">if </span><span class="self">Self</span>::captcha_exists_runner(<span class="kw-2">&amp;</span>key) {
             <span class="prelude-val">Ok</span>(RedisValue::Integer(<span class="number">0</span>))
         } <span class="kw">else </span>{
@@ -532,7 +561,10 @@
         <span class="kw">let </span>key_name = get_captcha_key(<span class="kw-2">&amp;</span>args.next_string()<span class="question-mark">?</span>);
         <span class="kw">let </span>new_name = get_captcha_key(<span class="kw-2">&amp;</span>args.next_string()<span class="question-mark">?</span>);
 
-        <span class="kw">let </span>key = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, <span class="kw-2">&amp;</span>key_name));
+        <span class="kw">let </span>key = ctx.open_key(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         <span class="kw">if </span><span class="self">Self</span>::captcha_exists_runner(<span class="kw-2">&amp;</span>key) {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(mcaptcha) = <span class="self">Self</span>::get_mcaptcha(<span class="kw-2">&amp;</span>key)<span class="question-mark">? </span>{
                 <span class="kw">let </span>mcaptcha = MCaptcha {
@@ -559,7 +591,10 @@
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>delete_captcha_runner(ctx: <span class="kw-2">&amp;</span>Context, key_name: <span class="kw-2">&amp;</span>str) -&gt; RedisResult {
-        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, key_name));
+        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            key_name.as_bytes(),
+        ));
         <span class="kw">if </span>key.key_type() == KeyType::Empty {
             <span class="prelude-val">Err</span>(RedisError::nonexistent_key())
         } <span class="kw">else </span>{
@@ -581,16 +616,21 @@
 
         <span class="comment">// Currently unused by Redis
         </span>mem_usage: <span class="prelude-val">None</span>,
+        mem_usage2: <span class="prelude-val">None</span>,
         digest: <span class="prelude-val">None</span>,
 
         <span class="comment">// Aux data
         </span>aux_load: <span class="prelude-val">None</span>,
         aux_save: <span class="prelude-val">None</span>,
+        aux_save2: <span class="prelude-val">None</span>,
         aux_save_triggers: <span class="number">0</span>,
 
         free_effort: <span class="prelude-val">None</span>,
+        free_effort2: <span class="prelude-val">None</span>,
         unlink: <span class="prelude-val">None</span>,
+        unlink2: <span class="prelude-val">None</span>,
         copy: <span class="prelude-val">None</span>,
+        copy2: <span class="prelude-val">None</span>,
         defrag: <span class="prelude-val">None</span>,
     },
 );

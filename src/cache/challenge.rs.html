@@ -170,6 +170,20 @@
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
 <a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
  *
@@ -224,7 +238,10 @@
 
         <span class="kw">let </span>challenge_name = get_challenge_name(<span class="kw-2">&amp;</span>captcha, <span class="kw-2">&amp;</span>add_challenge.challenge);
 
-        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, <span class="kw-2">&amp;</span>challenge_name));
+        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            challenge_name.as_bytes(),
+        ));
         <span class="kw">if </span>key.key_type() != KeyType::Empty {
             <span class="kw">return </span><span class="prelude-val">Err</span>(CacheError::DuplicateChallenge.into());
         }
@@ -243,7 +260,10 @@
 
         <span class="kw">let </span>challenge_name = get_challenge_name(<span class="kw-2">&amp;</span>captcha, <span class="kw-2">&amp;</span>challenge);
 
-        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, <span class="kw-2">&amp;</span>challenge_name));
+        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            challenge_name.as_bytes(),
+        ));
         <span class="kw">if </span>key.key_type() == KeyType::Empty {
             <span class="prelude-val">Err</span>(CacheError::ChallengeNotFound.into())
         } <span class="kw">else </span>{
@@ -259,7 +279,10 @@
 
         <span class="kw">let </span>challenge_name = get_challenge_name(<span class="kw-2">&amp;</span>captcha, <span class="kw-2">&amp;</span>challenge);
 
-        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create(ctx.ctx, <span class="kw-2">&amp;</span>challenge_name));
+        <span class="kw">let </span>key = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
+            ctx.ctx,
+            challenge_name.as_bytes(),
+        ));
         <span class="kw">if </span>key.key_type() == KeyType::Empty {
             <span class="kw">return </span><span class="prelude-val">Err</span>(CacheError::ChallengeNotFound.into());
         }
@@ -286,16 +309,21 @@
 
         <span class="comment">// Currently unused by Redis
         </span>mem_usage: <span class="prelude-val">None</span>,
+        mem_usage2: <span class="prelude-val">None</span>,
         digest: <span class="prelude-val">None</span>,
 
         <span class="comment">// Aux data
         </span>aux_load: <span class="prelude-val">None</span>,
         aux_save: <span class="prelude-val">None</span>,
+        aux_save2: <span class="prelude-val">None</span>,
         aux_save_triggers: <span class="number">0</span>,
 
         free_effort: <span class="prelude-val">None</span>,
+        free_effort2: <span class="prelude-val">None</span>,
         unlink: <span class="prelude-val">None</span>,
+        unlink2: <span class="prelude-val">None</span>,
         copy: <span class="prelude-val">None</span>,
+        copy2: <span class="prelude-val">None</span>,
         defrag: <span class="prelude-val">None</span>,
     },
 );

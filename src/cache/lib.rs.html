@@ -102,6 +102,13 @@
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021  Aravinth Manivannan &lt;realaravinth@batsense.net&gt;
  *
@@ -119,13 +126,17 @@
  * along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 </span><span class="kw">use </span>lazy_static::lazy_static;
-<span class="kw">use </span>redis_module::NotifyEvent;
-<span class="kw">use </span>redis_module::{redis_command, redis_event_handler, redis_module};
-<span class="kw">use </span>redis_module::{NextArg, RedisResult};
-<span class="comment">//use redis_module::RedisError;
-</span><span class="kw">use </span>redis_module::Context;
+<span class="comment">//use redis_module::{NotifyEvent, key};
+//use redis_module::{redis_command, redis_event_handler, redis_module};
+</span><span class="kw">use </span>redis_module::{
+    key, redis_command, redis_event_handler, redis_module, Context, NextArg, NotifyEvent,
+    RedisError, RedisResult, RedisString, RedisValue, Status,
+};
+<span class="comment">//use redis_module::{NextArg, RedisResult};
+//use redis_module::RedisError;
+//use redis_module::Context;
 
-<span class="kw">mod </span>bucket;
+</span><span class="kw">mod </span>bucket;
 <span class="kw">mod </span>challenge;
 <span class="kw">mod </span>errors;
 <span class="kw">mod </span>mcaptcha;
@@ -168,17 +179,19 @@
     <span class="kw">pub static </span><span class="kw-2">ref </span>PREFIX_CHALLENGE: String = <span class="macro">format!</span>(<span class="string">&quot;{}:CHALLENGE&quot;</span>, PKG_NAME);
 }
 
-<span class="kw">pub fn </span>on_delete(ctx: <span class="kw-2">&amp;</span>Context, event_type: NotifyEvent, event: <span class="kw-2">&amp;</span>str, key_name: <span class="kw-2">&amp;</span>str) {
+<span class="kw">pub fn </span>on_delete(ctx: <span class="kw-2">&amp;</span>Context, event_type: NotifyEvent, event: <span class="kw-2">&amp;</span>str, key_name: <span class="kw-2">&amp;</span>[u8]) {
+    <span class="kw">let </span>key_name = redis_module::RedisString::create_from_slice(ctx.ctx, key_name);
+    <span class="kw">let </span>key_name = key_name.to_string();
     <span class="kw">let </span>msg = <span class="macro">format!</span>(
         <span class="string">&quot;Received event: {:?} on key: {} via event: {}&quot;</span>,
         event_type, key_name, event
     );
     ctx.log_debug(msg.as_str());
 
-    <span class="kw">if </span>utils::is_bucket_timer(key_name) {
-        bucket::Bucket::on_delete(ctx, event_type, event, key_name);
-    } <span class="kw">else if </span>utils::is_mcaptcha_safety(key_name) {
-        <span class="kw">crate</span>::safety::MCaptchaSafety::on_delete(ctx, event_type, event, key_name);
+    <span class="kw">if </span>utils::is_bucket_timer(<span class="kw-2">&amp;</span>key_name) {
+        bucket::Bucket::on_delete(ctx, event_type, event, <span class="kw-2">&amp;</span>key_name);
+    } <span class="kw">else if </span>utils::is_mcaptcha_safety(<span class="kw-2">&amp;</span>key_name) {
+        <span class="kw">crate</span>::safety::MCaptchaSafety::on_delete(ctx, event_type, event, <span class="kw-2">&amp;</span>key_name);
     }
 }
 
@@ -189,6 +202,7 @@
     <span class="macro">redis_module! </span>{
         name: <span class="string">&quot;mcaptcha_cache&quot;</span>,
         version: PKG_VERSION,
+        allocator: (redis_module::alloc::RedisAlloc, redis_module::alloc::RedisAlloc),
         data_types: [MCAPTCHA_BUCKET_TYPE, MCAPTCHA_MCAPTCHA_TYPE, MCAPTCHA_SAFETY_TYPE, MCAPTCHA_CHALLENGE_TYPE],
         commands: [
             [<span class="string">&quot;MCAPTCHA_CACHE.ADD_VISITOR&quot;</span>, bucket::Bucket::counter_create, <span class="string">&quot;write&quot;</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>],
