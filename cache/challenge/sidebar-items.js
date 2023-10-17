@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["MCAPTCHA_CHALLENGE_VERSION",""]],"mod":[["type_methods",""]],"static":[["MCAPTCHA_CHALLENGE_TYPE",""]],"struct":[["Challenge",""]]};
+window.SIDEBAR_ITEMS = {"constant":["MCAPTCHA_CHALLENGE_VERSION"],"mod":["type_methods"],"static":["MCAPTCHA_CHALLENGE_TYPE"],"struct":["Challenge"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["RedisModule_OnLoad",""],["RedisModule_OnUnload",""],["__info_func",""]]};
+window.SIDEBAR_ITEMS = {"fn":["RedisModule_OnLoad","RedisModule_OnUnload","__info_func"]};

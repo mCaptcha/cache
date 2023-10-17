@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["REDIS_MCAPTCHA_BUCKET_TYPE_VERSION","Bucket type version, aka encoding version"]],"enum":[["Format","encoding formats for persistence"]],"mod":[["type_methods",""]],"static":[["MCAPTCHA_BUCKET_TYPE",""]],"struct":[["Bucket",""]]};
+window.SIDEBAR_ITEMS = {"constant":["REDIS_MCAPTCHA_BUCKET_TYPE_VERSION"],"enum":["Format"],"mod":["type_methods"],"static":["MCAPTCHA_BUCKET_TYPE"],"struct":["Bucket"]};
