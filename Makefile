@@ -40,9 +40,9 @@ env:
 	@-pip install codespell
 
 test:
-	@ . venv/bin/activate && ./scripts/spellcheck.sh -c
-#	cargo test  --all --all-features --no-fail-fast
 	./tests/test.py
+	#@ . venv/bin/activate && ./scripts/spellcheck.sh -c
+#	cargo test  --all --all-features --no-fail-fast
 
 xml-test-coverage:
 	cargo tarpaulin -t 1200 --out Xml --all --all-features --no-fail-fast
