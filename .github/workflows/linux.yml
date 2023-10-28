@@ -77,10 +77,9 @@ jobs:
         if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'mCaptcha/cache'
         run: make docker
 
-          #      TODO: key expired, regenerate and re-enable
-          #      - name: publish bins
-          #        if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'mCaptcha/cache'
-          #        run: ./scripts/publish.sh publish master latest $DUMBSERVE_PASSWORD
-          #        env:
-          #          DUMBSERVE_PASSWORD: ${{ secrets.DUMBSERVE_PASSWORD }}
-          #          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+      - name: publish bins
+        if: (github.ref == 'refs/heads/master' || github.event_name == 'push') && github.repository == 'mCaptcha/cache'
+        run: ./scripts/publish.sh publish master latest $DUMBSERVE_PASSWORD
+        env:
+          DUMBSERVE_PASSWORD: ${{ secrets.DUMBSERVE_PASSWORD }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
