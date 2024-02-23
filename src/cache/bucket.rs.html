@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/bucket.rs`."><title>bucket.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="cache" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../cache/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/bucket.rs`."><title>bucket.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="cache" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -352,7 +353,7 @@
  */
 </span><span class="doccomment">//! Leaky bucket algorithm is implemantation for mcatpcha using batch processing Everytime count
 //! is increased for an mcaptcha object, a decrement job is added to a batch that is scheduled to
-//! be executed at that mcaptcha object&#39;s expiry rate(MCaptcha.get_duration())
+//! be executed at that mcaptcha object's expiry rate(MCaptcha.get_duration())
 </span><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::time::Duration;
 
@@ -379,14 +380,14 @@
 
 <span class="kw">impl </span>Format {
     <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>parse_str&lt;<span class="lifetime">&#39;a</span>, T: Deserialize&lt;<span class="lifetime">&#39;a</span>&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; CacheResult&lt;T&gt; {
+    </span><span class="kw">pub fn </span>parse_str&lt;<span class="lifetime">'a</span>, T: Deserialize&lt;<span class="lifetime">'a</span>&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; CacheResult&lt;T&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             Format::Json =&gt; <span class="prelude-val">Ok</span>(serde_json::from_str(data)<span class="question-mark">?</span>),
         }
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>from_str&lt;<span class="lifetime">&#39;a</span>, T: Deserialize&lt;<span class="lifetime">&#39;a</span>&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; CacheResult&lt;T&gt; {
+    </span><span class="kw">pub fn </span>from_str&lt;<span class="lifetime">'a</span>, T: Deserialize&lt;<span class="lifetime">'a</span>&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; CacheResult&lt;T&gt; {
         <span class="kw">let </span>res = <span class="self">self</span>.parse_str(data)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(res)
     }
@@ -404,11 +405,11 @@
 
 <span class="kw">impl </span>Bucket {
     <span class="doccomment">/// Run when bucket timer expired at BUCKET_EXPIRY_OFFSET. Runs scheduled jobs in corresponding
-    /// if they haven&#39;t already executed
+    /// if they haven't already executed
     </span><span class="kw">pub fn </span>on_delete(ctx: <span class="kw-2">&amp;</span>Context, _event_type: NotifyEvent, _event: <span class="kw-2">&amp;</span>str, key_name: <span class="kw-2">&amp;</span>str) {
         <span class="comment">// TODO: this callback is executed after the bucket is deleted. So all jobs scheduled within
         // the bucket are lost. This means, we could end up with stagnent increments in mcaptcha objects
-        // Rather than setting a timer, use a safety, upon who&#39;s expiry, the bucket&#39;s callback(job
+        // Rather than setting a timer, use a safety, upon who's expiry, the bucket's callback(job
         // runner) will be executed
         </span><span class="kw">if </span>!is_bucket_timer(key_name) {
             <span class="kw">return</span>;
@@ -426,7 +427,7 @@
             bucket_name.as_bytes(),
         ));
         <span class="kw">if </span>bucket.key_type() == KeyType::Empty {
-            ctx.log_debug(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Bucket doesn&#39;t exist: {}&quot;</span>, key_name));
+            ctx.log_debug(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"Bucket doesn't exist: {}"</span>, key_name));
         } <span class="kw">else </span>{
             Bucket::decrement_runner(ctx, <span class="kw-2">&amp;</span>bucket);
         }
@@ -458,10 +459,10 @@
     </span><span class="kw">fn </span>decrement_runner(ctx: <span class="kw-2">&amp;</span>Context, key: <span class="kw-2">&amp;</span>RedisKeyWritable) {
         <span class="kw">match </span>key.get_value::&lt;Bucket&gt;(<span class="kw-2">&amp;</span>MCAPTCHA_BUCKET_TYPE) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(bucket)) =&gt; {
-                ctx.log_debug(<span class="string">&quot;entering loop hashmap&quot;</span>);
+                ctx.log_debug(<span class="string">"entering loop hashmap"</span>);
                 <span class="kw">for </span>(captcha, count) <span class="kw">in </span>bucket.decrement.drain() {
                     ctx.log_debug(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                        <span class="string">&quot;reading captcha: {} with decr count {}&quot;</span>,
+                        <span class="string">"reading captcha: {} with decr count {}"</span>,
                         <span class="kw-2">&amp;</span>captcha, count
                     ));
                     <span class="kw">let </span>stored_captcha = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
@@ -477,7 +478,7 @@
                 }
             }
             <span class="kw">_ </span>=&gt; {
-                ctx.log_debug(<span class="string">&quot;bucket not found, can&#39;t decrement&quot;</span>);
+                ctx.log_debug(<span class="string">"bucket not found, can't decrement"</span>);
             }
         }
     }
@@ -493,7 +494,7 @@
         ));
         <span class="kw">let _ </span>= timer.delete();
 
-        ctx.log_debug(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Bucket instant: {}&quot;</span>, <span class="kw-2">&amp;</span>bucket_instant));
+        ctx.log_debug(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"Bucket instant: {}"</span>, <span class="kw-2">&amp;</span>bucket_instant));
 
         <span class="kw">let </span>bucket = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
             ctx.ctx,
@@ -502,7 +503,7 @@
         Bucket::decrement_runner(ctx, <span class="kw-2">&amp;</span>bucket);
 
         <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = bucket.delete() {
-            ctx.log_warning(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;enountered error while deleting hashmap: {:?}&quot;</span>, e));
+            ctx.log_warning(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"enountered error while deleting hashmap: {:?}"</span>, e));
         }
 
         <span class="kw">let </span>timer = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
@@ -511,7 +512,7 @@
         ));
         <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = timer.delete() {
             ctx.log_warning(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                <span class="string">&quot;enountered error while deleting bucket tiemr: {:?}&quot;</span>,
+                <span class="string">"enountered error while deleting bucket tiemr: {:?}"</span>,
                 e
             ));
         }
@@ -527,23 +528,23 @@
             ctx.ctx,
             captcha_name.as_bytes(),
         ));
-        ctx.log_debug(<span class="string">&quot;loading mcaptcha&quot;</span>);
+        ctx.log_debug(<span class="string">"loading mcaptcha"</span>);
         <span class="kw">let </span>captcha = MCaptcha::get_mut_mcaptcha(<span class="kw-2">&amp;</span>captcha)<span class="question-mark">?</span>;
 
-        ctx.log_debug(<span class="string">&quot;loaded mcaptcha&quot;</span>);
+        ctx.log_debug(<span class="string">"loaded mcaptcha"</span>);
         <span class="kw">if </span>captcha.is_none() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(CacheError::new(<span class="string">&quot;Captcha not found&quot;</span>.into()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CacheError::new(<span class="string">"Captcha not found"</span>.into()));
         }
         <span class="kw">let </span>captcha = captcha.unwrap();
         ctx.log_debug(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-            <span class="string">&quot;current visitor count: {}&quot;</span>,
+            <span class="string">"current visitor count: {}"</span>,
             captcha.get_visitors()
         ));
         captcha.add_visitor();
         <span class="kw">let </span>res = captcha.get_add_visitor_result();
         <span class="kw">let </span>res = serde_json::to_string(<span class="kw-2">&amp;</span>res)<span class="question-mark">?</span>;
 
-        ctx.log_debug(<span class="string">&quot;visitor added&quot;</span>);
+        ctx.log_debug(<span class="string">"visitor added"</span>);
         <span class="kw">let </span>duration = captcha.get_duration();
 
         <span class="self">Self</span>::increment_by(ctx, (captcha_name, duration), <span class="number">1</span>)<span class="question-mark">?</span>;
@@ -560,7 +561,7 @@
         <span class="kw">let </span>bucket_instant = get_bucket_instant(duration)<span class="question-mark">?</span>;
         <span class="kw">let </span>bucket_name = get_bucket_name(bucket_instant);
 
-        <span class="comment">//        ctx.log_debug(&amp;format!(&quot;Bucket name: {}&quot;, &amp;bucket_name));
+        <span class="comment">//        ctx.log_debug(&amp;format!("Bucket name: {}", &amp;bucket_name));
 
         // get  bucket
         </span><span class="kw">let </span>bucket = ctx.open_key_writable(<span class="kw-2">&amp;</span>RedisString::create_from_slice(
@@ -584,7 +585,7 @@
                     ctx.ctx,
                     get_timer_name_from_bucket_name(<span class="kw-2">&amp;</span>bucket_name).as_bytes(),
                 ));
-                timer.write(<span class="string">&quot;1&quot;</span>)<span class="question-mark">?</span>;
+                timer.write(<span class="string">"1"</span>)<span class="question-mark">?</span>;
                 timer.set_expire(Duration::from_secs(duration + BUCKET_EXPIRY_OFFSET))<span class="question-mark">?</span>;
             }
         };
@@ -604,7 +605,7 @@
 }
 
 <span class="kw">pub static </span>MCAPTCHA_BUCKET_TYPE: RedisType = RedisType::new(
-    <span class="string">&quot;mcaptbuck&quot;</span>,
+    <span class="string">"mcaptbuck"</span>,
     REDIS_MCAPTCHA_BUCKET_TYPE_VERSION,
     raw::RedisModuleTypeMethods {
         version: raw::REDISMODULE_TYPE_METHOD_VERSION <span class="kw">as </span>u64,
@@ -642,31 +643,31 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
     <span class="attr">#[allow(non_snake_case, unused)]
-    </span><span class="kw">pub extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>rdb_load(rdb: <span class="kw-2">*mut </span>raw::RedisModuleIO, encver: c_int) -&gt; <span class="kw-2">*mut </span>c_void {
+    </span><span class="kw">pub extern </span><span class="string">"C" </span><span class="kw">fn </span>rdb_load(rdb: <span class="kw-2">*mut </span>raw::RedisModuleIO, encver: c_int) -&gt; <span class="kw-2">*mut </span>c_void {
         <span class="kw">let </span>bucket = <span class="kw">match </span>encver {
             <span class="number">0 </span>=&gt; {
                 <span class="kw">let </span>data = raw::load_string(rdb).unwrap().to_string();
                 <span class="kw">let </span>bucket: Bucket = Format::Json.from_str(<span class="kw-2">&amp;</span>data).unwrap();
                 bucket
             }
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Can&#39;t load bucket from old redis RDB, encver: {}&quot;</span>, encver,),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Can't load bucket from old redis RDB, encver: {}"</span>, encver,),
         };
 
         <span class="comment">//        if bucket.
         </span>Box::into_raw(Box::new(bucket)) <span class="kw">as </span><span class="kw-2">*mut </span>c_void
     }
 
-    <span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>free(value: <span class="kw-2">*mut </span>c_void) {
+    <span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>free(value: <span class="kw-2">*mut </span>c_void) {
         <span class="kw">let </span>val = value <span class="kw">as </span><span class="kw-2">*mut </span>Bucket;
         Box::from_raw(val);
     }
 
     <span class="attr">#[allow(non_snake_case, unused)]
-    </span><span class="kw">pub unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>rdb_save(rdb: <span class="kw-2">*mut </span>raw::RedisModuleIO, value: <span class="kw-2">*mut </span>c_void) {
+    </span><span class="kw">pub unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>rdb_save(rdb: <span class="kw-2">*mut </span>raw::RedisModuleIO, value: <span class="kw-2">*mut </span>c_void) {
         <span class="kw">let </span>bucket = <span class="kw-2">&amp;*</span>(value <span class="kw">as </span><span class="kw-2">*mut </span>Bucket);
         <span class="kw">match </span><span class="kw-2">&amp;</span>serde_json::to_string(bucket) {
             <span class="prelude-val">Ok</span>(string) =&gt; raw::save_string(rdb, string),
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">eprintln!</span>(<span class="string">&quot;error while rdb_save: {}&quot;</span>, e),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">eprintln!</span>(<span class="string">"error while rdb_save: {}"</span>, e),
         }
     }
 }
