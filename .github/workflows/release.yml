@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  release:
+    type: [published]
+
+jobs:
+  build_and_test:
+    strategy:
+      fail-fast: false
+
+    name: x86_64-unknown-linux-gnu
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: configure GPG key
+        run: echo -n "$RELEASE_BOT_GPG_SIGNING_KEY" | gpg --batch --import --pinentry-mode loopback
+        env:
+          RELEASE_BOT_GPG_SIGNING_KEY: ${{ secrets.RELEASE_BOT_GPG_SIGNING_KEY }}
+
+      - name: Set release tag
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable-x86_64-unknown-linux-gnu
+          profile: minimal
+          override: false
+
+      - name: install virtualenv
+        run: pip install virtualenv
+
+      - name: install dependencies
+        run: make env
+
+      - name: build docker image
+        run: docker buildx build -t mcaptcha/cache:${RELEASE_VERSION} . --load
+
+      - name: stop docker container
+        run: make docker-stop
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: mcaptcha
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: build and publish docker images
+        run: docker push mcaptcha/cache:${RELEASE_VERSION}
+
+      - name: publish bins
+        run: ./scripts/publish.sh publish $RELEASE_VERSION latest $DUMBSERVE_PASSWORD
+        env:
+          DUMBSERVE_PASSWORD: ${{ secrets.DUMBSERVE_PASSWORD }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
