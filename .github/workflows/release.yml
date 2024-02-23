@@ -39,9 +39,6 @@ jobs:
       - name: build docker image
         run: docker buildx build -t mcaptcha/cache:${RELEASE_VERSION} . --load
 
-      - name: stop docker container
-        run: make docker-stop
-
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
